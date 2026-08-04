@@ -18,7 +18,7 @@ export default function BannerPromocional() {
   return (
     <div className="max-w-3xl mx-auto px-5 py-6">
       <div className="text-[9px] uppercase tracking-widest text-dim mb-1.5 text-center">Publicidad</div>
-      
+      <a
         href={banner.href}
         target="_blank"
         rel="noreferrer"
