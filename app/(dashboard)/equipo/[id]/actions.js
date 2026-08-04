@@ -2,8 +2,9 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { enviarNotificacionEstado, } from "@/lib/email";
+import { enviarNotificacionEstado, enviarEmail } from "@/lib/email";
 import { MSG_ESTADO } from "@/lib/estados";
+import { NEGOCIO } from "@/lib/config";
 
 export async function cambiarEstado(equipoId, nuevoEstado) {
   const supabase = createClient();
@@ -73,5 +74,78 @@ export async function guardarInforme(equipoId, formData) {
     return { ok: true };
   } catch (err) {
     return { error: err.message || "Ocurrió un error al guardar el informe." };
+  }
+}
+
+export async function enviarPresupuesto(equipoId, formData) {
+  try {
+    const supabase = createClient();
+
+    const num = (v) => {
+      const n = parseFloat((v || "0").toString().replace(",", "."));
+      return isNaN(n) ? 0 : n;
+    };
+
+    const manoObra = num(formData.get("presupuesto_mano_obra"));
+    const repuestos = num(formData.get("presupuesto_repuestos"));
+    const detalle = formData.get("presupuesto_detalle")?.toString().trim() || null;
+
+    const { data: equipo, error: fetchErr } = await supabase
+      .from("equipos")
+      .select("*, cliente:profiles!equipos_cliente_id_fkey(nombre, email)")
+      .eq("id", equipoId)
+      .single();
+    if (fetchErr) return { error: fetchErr.message };
+
+    const { error } = await supabase
+      .from("equipos")
+      .update({
+        presupuesto_detalle: detalle,
+        presupuesto_mano_obra: manoObra,
+        presupuesto_repuestos: repuestos,
+        presupuesto_enviado_at: new Date().toISOString(),
+        presupuesto_respuesta: null,
+        presupuesto_respuesta_at: null,
+        estado: "espera_presupuesto",
+      })
+      .eq("id", equipoId);
+    if (error) return { error: error.message };
+
+    await supabase.from("historial_estados").insert({ equipo_id: equipoId, estado: "espera_presupuesto" });
+
+    const total = manoObra + repuestos;
+    const nombre = equipo.cliente?.nombre?.split(" ")[0] || "cliente";
+    const texto = `Hola ${nombre}, el presupuesto de tu equipo (caso #${equipo.numero}) ya está listo: $${total.toLocaleString(
+      "es-AR",
+      { minimumFractionDigits: 2 }
+    )}. Ingresá a tu cuenta para verlo en detalle y aceptarlo o rechazarlo.`;
+
+    await supabase.from("notificaciones").insert({ equipo_id: equipoId, texto, canal: "email" });
+
+    if (equipo.cliente?.email) {
+      await enviarEmail({
+        to: equipo.cliente.email,
+        subject: `${NEGOCIO.nombreCorto} — Presupuesto listo (Caso #${String(equipo.numero).padStart(5, "0")})`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 480px; margin: auto;">
+            <p style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#999;">${NEGOCIO.nombre}</p>
+            <h2 style="color:#E8873A; margin-top:0;">Presupuesto — Caso #${String(equipo.numero).padStart(5, "0")}</h2>
+            <p style="font-size:15px; color:#222;">${texto}</p>
+            ${detalle ? `<p style="font-size:13px; color:#444; background:#f5f5f5; padding:10px; border-radius:6px;">${detalle}</p>` : ""}
+            <p style="font-size:20px; font-weight:bold; color:#222;">Total: $${total.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</p>
+            <p style="font-size:12px; color:#888;">Iniciá sesión en el sistema para aceptarlo o rechazarlo.</p>
+          </div>
+        `,
+      });
+    }
+
+    revalidatePath(`/equipo/${equipoId}`);
+    revalidatePath("/panel");
+    revalidatePath("/equipos");
+    revalidatePath("/mis-equipos");
+
+    return { ok: true };
+  } catch (err) {
+    return { error: err.message || "Ocurrió un error al enviar el presupuesto." };
   }
 }

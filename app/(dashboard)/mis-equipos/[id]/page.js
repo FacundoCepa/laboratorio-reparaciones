@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import StatusPill from "@/components/StatusPill";
 import ProgressRail from "@/components/ProgressRail";
+import PresupuestoCliente from "./PresupuestoCliente";
 import { estadoInfo } from "@/lib/estados";
 
 export default async function MiEquipoDetallePage({ params }) {
@@ -42,6 +43,8 @@ export default async function MiEquipoDetallePage({ params }) {
       <p className="text-sm text-dim mb-6">
         Serial: <span className="font-mono">{equipo.serial}</span>
       </p>
+
+      {equipo.presupuesto_enviado_at && <PresupuestoCliente equipo={equipo} />}
 
       <div className="card p-5 mb-5">
         <div className="eyebrow">Estado actual</div>

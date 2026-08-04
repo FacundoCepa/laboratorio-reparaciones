@@ -4,6 +4,7 @@ import ProgressRail from "@/components/ProgressRail";
 import { ESTADOS, estadoInfo, estadoIndex } from "@/lib/estados";
 import EstadoActions from "./EstadoActions";
 import InformeForm from "./InformeForm";
+import PresupuestoForm from "./PresupuestoForm";
 
 export default async function EquipoDetallePage({ params }) {
   const supabase = createClient();
@@ -57,6 +58,14 @@ export default async function EquipoDetallePage({ params }) {
             <a href={`/etiqueta/${equipo.id}`} target="_blank" rel="noreferrer" className="btn-ghost w-full mt-2">
               🖨️ Ver / reimprimir etiqueta
             </a>
+          </div>
+
+          <div className="card p-5">
+            <div className="eyebrow">Presupuesto</div>
+            <p className="text-xs text-dim mt-1 mb-3">
+              Armalo y envialo cuando el caso esté en "Elaborando presupuesto".
+            </p>
+            <PresupuestoForm equipo={equipo} />
           </div>
 
           <div className="card p-5">
