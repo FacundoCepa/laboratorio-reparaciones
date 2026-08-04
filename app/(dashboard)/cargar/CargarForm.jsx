@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { registrarEquipo } from "./actions";
 import { TIPOS_EQUIPO } from "@/lib/estados";
+import { NEGOCIO } from "@/lib/config";
 
 export default function CargarForm({ isStaff, clientes }) {
   const [nuevoCliente, setNuevoCliente] = useState(false);
@@ -31,6 +32,48 @@ export default function CargarForm({ isStaff, clientes }) {
     }
   };
 
+  const imprimirTicketCredenciales = () => {
+    const { equipo } = resultado;
+    const cred = resultado.credencialesNuevoCliente;
+    const siteUrl = window.location.origin;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(siteUrl + "/login")}`;
+    const html = `<!doctype html><html><head><meta charset="utf-8"/><title>Ticket de acceso</title>
+      <style>
+        @page { size: 80mm 130mm; margin: 6mm; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Courier New', monospace; color:#111; margin:0; }
+        .ticket { border: 2px dashed #111; padding: 14px; text-align:center; }
+        .eyebrow { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color:#555; }
+        .titulo { font-size: 13px; font-weight: bold; text-transform:uppercase; margin: 4px 0 10px; border-bottom: 1px solid #111; padding-bottom:8px; }
+        .row { display:flex; justify-content:space-between; font-size: 12px; padding: 5px 0; border-bottom: 1px dotted #ccc; text-align:left; }
+        .row b { text-transform: none; }
+        .cred { background:#f4f4f4; border-radius:6px; padding:10px; margin-top:10px; text-align:left; }
+        .foot { margin-top: 10px; font-size: 9px; color:#777; }
+      </style></head>
+      <body>
+        <div class="ticket">
+          <div class="eyebrow">${NEGOCIO.nombre}</div>
+          <div class="titulo">Acceso a tu cuenta</div>
+          <div class="row"><span>Caso</span><b>#${String(equipo.numero).padStart(5, "0")}</b></div>
+          <div class="row"><span>Equipo</span><b>${equipo.tipo} ${equipo.marca} ${equipo.modelo}</b></div>
+          <div class="cred">
+            <div style="font-size:11px; color:#555;">Usuario (email)</div>
+            <div style="font-size:13px; font-weight:bold; margin-bottom:8px;">${cred.email}</div>
+            <div style="font-size:11px; color:#555;">Contraseña</div>
+            <div style="font-size:13px; font-weight:bold;">${cred.password}</div>
+          </div>
+          <p style="font-size:11px; margin-top:12px;">Escaneá el código o entrá a <b>${siteUrl}</b> para seguir el estado de tu equipo.</p>
+          <img src="${qrUrl}" width="130" height="130" />
+          <div class="foot">Guardá este ticket — es la única vez que se muestra tu contraseña.</div>
+        </div>
+      </body></html>`;
+    const w = window.open("", "_blank", "width=420,height=650");
+    if (!w) return;
+    w.document.write(html);
+    w.document.close();
+    setTimeout(() => { w.focus(); w.print(); }, 300);
+  };
+
   if (resultado) {
     const { equipo, credencialesNuevoCliente } = resultado;
     return (
@@ -47,19 +90,33 @@ export default function CargarForm({ isStaff, clientes }) {
             <div className="text-sm text-ink font-mono">Email: {credencialesNuevoCliente.email}</div>
             <div className="text-sm text-ink font-mono">Contraseña: {credencialesNuevoCliente.password}</div>
             <p className="text-[11px] text-dim mt-2">
-              Compartíselas al cliente (y sugerile cambiarla) para que pueda hacer seguimiento online.
+              Como vino en persona y nunca usó el sistema, imprimile el ticket de abajo con estos datos y el QR de
+              acceso.
             </p>
           </div>
         )}
 
-        <div className="flex gap-2 justify-center">
-          <a href={`/etiqueta/${equipo.id}`} target="_blank" rel="noreferrer" className="btn">
-            🖨️ Ver / imprimir etiqueta
-          </a>
-          <button className="btn-ghost" onClick={() => setResultado(null)}>
-            Registrar otro
-          </button>
+        <div className="bg-surface2 border border-border rounded-lg p-4 mb-6 text-left">
+          <div className="text-xs font-semibold text-accent mb-3">📋 Pasos antes de enviar el equipo</div>
+          <div className="space-y-2">
+            <a href={`/etiqueta/${equipo.id}`} target="_blank" rel="noreferrer" className="btn w-full">
+              1️⃣ Imprimir cupón — pegalo en el equipo
+            </a>
+            {credencialesNuevoCliente ? (
+              <button onClick={imprimirTicketCredenciales} className="btn-ghost w-full">
+                2️⃣ Imprimir ticket con usuario y contraseña
+              </button>
+            ) : (
+              <a href={`/ticket/${equipo.id}`} target="_blank" rel="noreferrer" className="btn-ghost w-full">
+                2️⃣ Imprimir mi comprobante
+              </a>
+            )}
+          </div>
         </div>
+
+        <button className="btn-ghost" onClick={() => setResultado(null)}>
+          Registrar otro
+        </button>
       </div>
     );
   }

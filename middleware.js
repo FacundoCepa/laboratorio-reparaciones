@@ -34,6 +34,7 @@ export async function middleware(request) {
   const isPublicLabel =
     request.nextUrl.pathname.startsWith("/etiqueta") ||
     request.nextUrl.pathname.startsWith("/informe") ||
+    request.nextUrl.pathname.startsWith("/ticket") ||
     request.nextUrl.pathname.startsWith("/auth/callback") ||
     request.nextUrl.pathname.startsWith("/reset-password");
 
