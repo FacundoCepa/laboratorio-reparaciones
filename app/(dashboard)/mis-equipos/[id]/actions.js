@@ -28,14 +28,9 @@ export async function responderPresupuesto(equipoId, respuesta) {
       presupuesto_respuesta: respuesta,
       presupuesto_respuesta_at: new Date().toISOString(),
     };
-    if (respuesta === "aceptado") patch.estado = "reparacion";
 
     const { error } = await supabase.from("equipos").update(patch).eq("id", equipoId);
     if (error) return { error: error.message };
-
-    if (respuesta === "aceptado") {
-      await supabase.from("historial_estados").insert({ equipo_id: equipoId, estado: "reparacion" });
-    }
 
     // Avisar al staff (todos los admin/técnico) por email.
     const { data: staff } = await supabase.from("profiles").select("email, nombre").in("role", ["admin", "tecnico"]);
@@ -50,6 +45,7 @@ export async function responderPresupuesto(equipoId, respuesta) {
           Caso #${String(equipo.numero).padStart(5, "0")} — ${equipo.tipo} ${equipo.marca} ${equipo.modelo}
         </p>
         <p style="font-size:14px; color:#444;">Monto presupuestado: $${total.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</p>
+        ${respuesta === "aceptado" ? '<p style="font-size:13px; color:#888;">Entrá al caso en el sistema para pasarlo a "En proceso de reparación" cuando quieras.</p>' : ""}
       </div>
     `;
     for (const s of staff || []) {

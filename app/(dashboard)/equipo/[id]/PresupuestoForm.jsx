@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { enviarPresupuesto } from "./actions";
+import { useState, useRef, useTransition } from "react";
+import { enviarPresupuesto, cambiarEstado } from "./actions";
 
 export default function PresupuestoForm({ equipo }) {
   const formRef = useRef(null);
@@ -10,6 +10,7 @@ export default function PresupuestoForm({ equipo }) {
   const [enviado, setEnviado] = useState(false);
   const [manoObra, setManoObra] = useState(equipo.presupuesto_mano_obra || 0);
   const [repuestos, setRepuestos] = useState(equipo.presupuesto_repuestos || 0);
+  const [isPending, startTransition] = useTransition();
 
   const total = (parseFloat(manoObra) || 0) + (parseFloat(repuestos) || 0);
 
@@ -28,21 +29,37 @@ export default function PresupuestoForm({ equipo }) {
     setEnviado(true);
   };
 
+  const continuarAReparacion = () => {
+    startTransition(async () => {
+      await cambiarEstado(equipo.id, "reparacion");
+    });
+  };
+
+  const esperandoAvanzar = equipo.presupuesto_respuesta === "aceptado" && equipo.estado === "espera_presupuesto";
+
   return (
     <div>
-      {equipo.presupuesto_respuesta && (
-        <div
-          className={`rounded-lg p-3 mb-4 text-sm font-semibold ${
-            equipo.presupuesto_respuesta === "aceptado"
-              ? "bg-good/10 text-good border border-good/30"
-              : "bg-bad/10 text-bad border border-bad/30"
-          }`}
-        >
-          {equipo.presupuesto_respuesta === "aceptado" ? "✓ El cliente aceptó el presupuesto" : "✕ El cliente rechazó el presupuesto"}
+      {equipo.presupuesto_respuesta === "aceptado" && (
+        <div className="rounded-lg p-4 mb-4 bg-good/10 border border-good/30">
+          <div className="text-good font-semibold text-sm mb-0.5">✓ El cliente aceptó el presupuesto</div>
           {equipo.presupuesto_respuesta_at && (
-            <span className="block text-xs font-normal opacity-80 mt-0.5">
-              {new Date(equipo.presupuesto_respuesta_at).toLocaleString("es-AR")}
-            </span>
+            <div className="text-xs text-dim mb-3">{new Date(equipo.presupuesto_respuesta_at).toLocaleString("es-AR")}</div>
+          )}
+          {esperandoAvanzar && (
+            <>
+              <p className="text-sm text-ink mb-3">¿Querés pasarlo a "En proceso de reparación"?</p>
+              <button disabled={isPending} onClick={continuarAReparacion} className="btn w-full">
+                {isPending ? "Actualizando..." : "Sí, continuar a reparación"}
+              </button>
+            </>
+          )}
+        </div>
+      )}
+      {equipo.presupuesto_respuesta === "rechazado" && (
+        <div className="rounded-lg p-4 mb-4 bg-bad/10 border border-bad/30">
+          <div className="text-bad font-semibold text-sm mb-0.5">✕ El cliente rechazó el presupuesto</div>
+          {equipo.presupuesto_respuesta_at && (
+            <div className="text-xs text-dim">{new Date(equipo.presupuesto_respuesta_at).toLocaleString("es-AR")}</div>
           )}
         </div>
       )}

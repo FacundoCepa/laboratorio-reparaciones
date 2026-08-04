@@ -20,6 +20,7 @@ export default async function PanelPage() {
 
   const all = equipos || [];
   const pendientes = all.filter((e) => e.estado === "registrado");
+  const esperandoAvanzar = all.filter((e) => e.presupuesto_respuesta === "aceptado" && e.estado === "espera_presupuesto");
   const enLab = all.filter((e) => !["registrado", "finalizado", "entrega"].includes(e.estado));
   const listos = all.filter((e) => ["finalizado", "entrega"].includes(e.estado));
 
@@ -62,6 +63,17 @@ export default async function PanelPage() {
         <Stat label="Listos / entrega" value={listos.length} color="#7FBF7F" />
         <Stat label="Total histórico" value={all.length} color="#6FA8DC" />
       </div>
+
+      {esperandoAvanzar.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-sm font-bold text-good mb-3">✓ Presupuestos aceptados — esperando iniciar reparación</h2>
+          <div className="space-y-2.5">
+            {esperandoAvanzar.map((e) => (
+              <EquipoRow key={e.id} e={e} />
+            ))}
+          </div>
+        </div>
+      )}
 
       {pendientes.length > 0 && (
         <div className="mb-8">
