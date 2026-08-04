@@ -37,8 +37,15 @@ export default function PresupuestoForm({ equipo }) {
 
   const esperandoAvanzar = equipo.presupuesto_respuesta === "aceptado" && equipo.estado === "espera_presupuesto";
 
+  const yaEnviado = Boolean(equipo.presupuesto_enviado_at);
+
   return (
     <div>
+      {yaEnviado && (
+        <div className="rounded-lg p-3 mb-4 bg-info/10 border border-info/30 text-info text-sm font-semibold">
+          📨 Presupuesto enviado el {new Date(equipo.presupuesto_enviado_at).toLocaleString("es-AR")}
+        </div>
+      )}
       {equipo.presupuesto_respuesta === "aceptado" && (
         <div className="rounded-lg p-4 mb-4 bg-good/10 border border-good/30">
           <div className="text-good font-semibold text-sm mb-0.5">✓ El cliente aceptó el presupuesto</div>
@@ -113,10 +120,10 @@ export default function PresupuestoForm({ equipo }) {
         </div>
 
         {error && <div className="text-bad text-xs mb-3">{error}</div>}
-        {enviado && <div className="text-good text-xs mb-3">Presupuesto enviado al cliente por email.</div>}
+        {enviado && <div className="text-good text-xs mb-3">✓ Presupuesto enviado y notificado por email recién ahora.</div>}
 
         <button type="submit" disabled={saving} className="btn w-full">
-          {saving ? "Enviando..." : "Enviar presupuesto al cliente"}
+          {saving ? "Enviando..." : yaEnviado ? "Reenviar presupuesto actualizado" : "Enviar presupuesto al cliente"}
         </button>
         <p className="text-[11px] text-dim mt-2">
           Al enviarlo, el caso pasa a "Espera de aceptación del presupuesto" y el cliente recibe un email con el

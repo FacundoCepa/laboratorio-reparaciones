@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { enviarEmail } from "@/lib/email";
 import { NEGOCIO } from "@/lib/config";
 import { revalidatePath } from "next/cache";
@@ -15,7 +15,10 @@ export async function responderPresupuesto(equipoId, respuesta) {
     } = await supabase.auth.getUser();
     if (!user) return { error: "No autenticado." };
 
-    // Solo puede responder el dueño del equipo (lo refuerza también la RLS).
+    // Verificamos la titularidad con el cliente normal (respeta RLS: solo
+    // puede leer sus propios equipos). Recién si esto confirma que es el
+    // dueño, usamos el cliente admin para poder escribir el cambio, porque
+    // la política de UPDATE de "equipos" solo permite escribir al staff.
     const { data: equipo, error: fetchErr } = await supabase
       .from("equipos")
       .select("*")
@@ -24,16 +27,19 @@ export async function responderPresupuesto(equipoId, respuesta) {
       .single();
     if (fetchErr || !equipo) return { error: "No encontramos ese equipo." };
 
-    const patch = {
-      presupuesto_respuesta: respuesta,
-      presupuesto_respuesta_at: new Date().toISOString(),
-    };
+    const admin = createAdminClient();
 
-    const { error } = await supabase.from("equipos").update(patch).eq("id", equipoId);
+    const { error } = await admin
+      .from("equipos")
+      .update({
+        presupuesto_respuesta: respuesta,
+        presupuesto_respuesta_at: new Date().toISOString(),
+      })
+      .eq("id", equipoId);
     if (error) return { error: error.message };
 
     // Avisar al staff (todos los admin/técnico) por email.
-    const { data: staff } = await supabase.from("profiles").select("email, nombre").in("role", ["admin", "tecnico"]);
+    const { data: staff } = await admin.from("profiles").select("email, nombre").in("role", ["admin", "tecnico"]);
     const total = Number(equipo.presupuesto_mano_obra || 0) + Number(equipo.presupuesto_repuestos || 0);
     const asunto = `${NEGOCIO.nombreCorto} — Presupuesto ${respuesta} (Caso #${String(equipo.numero).padStart(5, "0")})`;
     const html = `
