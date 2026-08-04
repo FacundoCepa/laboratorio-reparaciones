@@ -22,7 +22,7 @@ export default function BannerPromocional() {
         href={banner.href}
         target="_blank"
         rel="noreferrer"
-        className="block h-16 rounded-lg overflow-hidden border border-border2 bg-surface hover:border-accent transition flex items-center justify-center"
+        className="block h-20 rounded-lg overflow-hidden border border-border2 bg-surface hover:border-accent transition flex items-center justify-center"
       >
         <img src={banner.image} alt={banner.alt} className="h-full w-full object-contain p-1.5" />
       </a>
