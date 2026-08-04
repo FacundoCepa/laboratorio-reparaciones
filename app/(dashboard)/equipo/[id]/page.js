@@ -3,6 +3,7 @@ import StatusPill from "@/components/StatusPill";
 import ProgressRail from "@/components/ProgressRail";
 import { ESTADOS, estadoInfo, estadoIndex } from "@/lib/estados";
 import EstadoActions from "./EstadoActions";
+import InformeForm from "./InformeForm";
 
 export default async function EquipoDetallePage({ params }) {
   const supabase = createClient();
@@ -86,6 +87,14 @@ export default async function EquipoDetallePage({ params }) {
               </div>
             </div>
           )}
+
+          <div className="card p-5">
+            <div className="eyebrow">Informe de reparación y costo</div>
+            <p className="text-xs text-dim mt-1 mb-3">
+              Completalo cuando el equipo esté reparado o finalizado. Se puede editar e imprimir las veces que haga falta.
+            </p>
+            <InformeForm equipo={equipo} />
+          </div>
         </div>
 
         <div>

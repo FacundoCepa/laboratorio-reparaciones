@@ -15,7 +15,12 @@ export async function cambiarEstado(equipoId, nuevoEstado) {
     .single();
   if (fetchErr) throw fetchErr;
 
-  const { error } = await supabase.from("equipos").update({ estado: nuevoEstado }).eq("id", equipoId);
+  const patch = { estado: nuevoEstado };
+  if (nuevoEstado === "finalizado" && !equipo.finalizado_at) {
+    patch.finalizado_at = new Date().toISOString();
+  }
+
+  const { error } = await supabase.from("equipos").update(patch).eq("id", equipoId);
   if (error) throw error;
 
   await supabase.from("historial_estados").insert({ equipo_id: equipoId, estado: nuevoEstado });
@@ -36,4 +41,37 @@ export async function cambiarEstado(equipoId, nuevoEstado) {
   revalidatePath("/equipos");
   revalidatePath("/historial");
   revalidatePath("/mis-equipos");
+}
+
+export async function guardarInforme(equipoId, formData) {
+  try {
+    const supabase = createClient();
+
+    const num = (v) => {
+      const n = parseFloat((v || "0").toString().replace(",", "."));
+      return isNaN(n) ? 0 : n;
+    };
+
+    const { error } = await supabase
+      .from("equipos")
+      .update({
+        diagnostico: formData.get("diagnostico")?.toString().trim() || null,
+        trabajo_realizado: formData.get("trabajo_realizado")?.toString().trim() || null,
+        repuestos_utilizados: formData.get("repuestos_utilizados")?.toString().trim() || null,
+        costo_mano_obra: num(formData.get("costo_mano_obra")),
+        costo_repuestos: num(formData.get("costo_repuestos")),
+        garantia_dias: parseInt(formData.get("garantia_dias") || "90", 10) || 0,
+        observaciones: formData.get("observaciones")?.toString().trim() || null,
+        tecnico_nombre: formData.get("tecnico_nombre")?.toString().trim() || null,
+      })
+      .eq("id", equipoId);
+
+    if (error) return { error: error.message };
+
+    revalidatePath(`/equipo/${equipoId}`);
+    revalidatePath(`/informe/${equipoId}`);
+    return { ok: true };
+  } catch (err) {
+    return { error: err.message || "Ocurrió un error al guardar el informe." };
+  }
 }

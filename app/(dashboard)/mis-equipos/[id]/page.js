@@ -51,6 +51,25 @@ export default async function MiEquipoDetallePage({ params }) {
         <ProgressRail estadoActual={equipo.estado} historial={historial || []} />
       </div>
 
+      {(equipo.diagnostico || equipo.costo_mano_obra > 0 || equipo.costo_repuestos > 0) && (
+        <div className="card p-5 mb-5">
+          <div className="eyebrow">Informe de reparación</div>
+          {equipo.diagnostico && <p className="text-sm text-ink mt-2 whitespace-pre-wrap">{equipo.diagnostico}</p>}
+          {equipo.trabajo_realizado && (
+            <p className="text-sm text-dim mt-2 whitespace-pre-wrap">{equipo.trabajo_realizado}</p>
+          )}
+          <div className="text-right text-ink font-bold mt-3">
+            Total: $
+            {(Number(equipo.costo_mano_obra || 0) + Number(equipo.costo_repuestos || 0)).toLocaleString("es-AR", {
+              minimumFractionDigits: 2,
+            })}
+          </div>
+          <a href={`/informe/${equipo.id}`} target="_blank" rel="noreferrer" className="btn-ghost w-full mt-3">
+            🖨️ Ver informe completo
+          </a>
+        </div>
+      )}
+
       <div className="card p-5">
         <div className="eyebrow">Notificaciones recibidas</div>
         <div className="space-y-2 mt-3">
