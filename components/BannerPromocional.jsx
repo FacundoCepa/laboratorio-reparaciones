@@ -16,22 +16,20 @@ export default function BannerPromocional() {
   const banner = BANNERS[i];
 
   return (
-    <div className="max-w-3xl mx-auto px-5 pt-6">
-      <a
+    <div className="max-w-3xl mx-auto px-5 py-6">
+      <div className="text-[9px] uppercase tracking-widest text-dim mb-1.5 text-center">Publicidad</div>
+      
         href={banner.href}
         target="_blank"
         rel="noreferrer"
-        className="block rounded-xl overflow-hidden border border-border hover:border-accent transition"
+        className="block h-16 rounded-lg overflow-hidden border border-border2 bg-surface hover:border-accent transition flex items-center justify-center"
       >
-        <img src={banner.image} alt={banner.alt} className="w-full max-h-40 object-cover bg-surface" />
+        <img src={banner.image} alt={banner.alt} className="h-full w-full object-contain p-1.5" />
       </a>
       {BANNERS.length > 1 && (
-        <div className="flex justify-center gap-1.5 mt-2">
+        <div className="flex justify-center gap-1.5 mt-1.5">
           {BANNERS.map((_, idx) => (
-            <span
-              key={idx}
-              className={`w-1.5 h-1.5 rounded-full ${idx === i ? "bg-accent" : "bg-border2"}`}
-            />
+            <span key={idx} className={`w-1 h-1 rounded-full ${idx === i ? "bg-accent" : "bg-border2"}`} />
           ))}
         </div>
       )}
