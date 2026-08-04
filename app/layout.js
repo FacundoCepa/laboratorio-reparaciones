@@ -1,8 +1,9 @@
 import "./globals.css";
+import { NEGOCIO } from "@/lib/config";
 
 export const metadata = {
-  title: "Laboratorio de Reparaciones",
-  description: "Sistema de seguimiento de reparaciones de equipos informáticos",
+  title: `${NEGOCIO.nombreCorto} — Laboratorio de reparaciones`,
+  description: `Sistema de seguimiento de reparaciones de equipos informáticos de ${NEGOCIO.nombre}`,
 };
 
 export default function RootLayout({ children }) {

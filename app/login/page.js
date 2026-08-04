@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { NEGOCIO } from "@/lib/config";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -34,10 +35,10 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="flex items-center gap-2.5 mb-8 justify-center">
           <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center text-bg font-bold">
-            🔧
+            {NEGOCIO.emoji}
           </div>
           <div>
-            <div className="font-bold text-ink leading-tight">Laboratorio</div>
+            <div className="font-bold text-ink leading-tight">{NEGOCIO.nombreCorto}</div>
             <div className="text-[11px] text-dim uppercase tracking-wide leading-tight">
               Gestión de reparaciones
             </div>

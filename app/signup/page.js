@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { crearCuentaCliente } from "./actions";
+import { NEGOCIO } from "@/lib/config";
 
 export default function SignupPage() {
   const [error, setError] = useState("");
@@ -34,9 +35,11 @@ export default function SignupPage() {
     <div className="min-h-screen w-full flex items-center justify-center p-6">
       <div className="w-full max-w-sm">
         <div className="flex items-center gap-2.5 mb-8 justify-center">
-          <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center text-bg font-bold">🔧</div>
+          <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center text-bg font-bold">
+            {NEGOCIO.emoji}
+          </div>
           <div>
-            <div className="font-bold text-ink leading-tight">Laboratorio</div>
+            <div className="font-bold text-ink leading-tight">{NEGOCIO.nombreCorto}</div>
             <div className="text-[11px] text-dim uppercase tracking-wide leading-tight">Crear cuenta de cliente</div>
           </div>
         </div>

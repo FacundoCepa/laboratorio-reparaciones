@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { NEGOCIO } from "@/lib/config";
 
 export default function Header({ nombre, role }) {
   const pathname = usePathname();
@@ -31,7 +32,9 @@ export default function Header({ nombre, role }) {
   return (
     <div className="border-b border-border bg-[#211F1C] sticky top-0 z-10">
       <div className="max-w-5xl mx-auto px-5 py-3 flex items-center justify-between gap-4">
-        <div className="font-bold text-ink text-sm">🔧 Laboratorio</div>
+        <div className="font-bold text-ink text-sm">
+          {NEGOCIO.emoji} {NEGOCIO.nombreCorto}
+        </div>
         <div className="flex items-center gap-1 bg-bg p-1 rounded-lg border border-border2">
           {tabs.map((t) => (
             <Link
