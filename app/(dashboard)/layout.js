@@ -21,8 +21,8 @@ export default async function DashboardLayout({ children }) {
   return (
     <div className="min-h-screen">
       <Header nombre={profile.nombre} role={profile.role} />
-      {profile.role === "cliente" && <BannerPromocional />}
       <div>{children}</div>
+      {profile.role === "cliente" && <BannerPromocional />}
     </div>
   );
 }
