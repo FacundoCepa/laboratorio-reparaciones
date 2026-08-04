@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Header from "@/components/Header";
+import BannerPromocional from "@/components/BannerPromocional";
 
 export default async function DashboardLayout({ children }) {
   const supabase = createClient();
@@ -20,6 +21,7 @@ export default async function DashboardLayout({ children }) {
   return (
     <div className="min-h-screen">
       <Header nombre={profile.nombre} role={profile.role} />
+      {profile.role === "cliente" && <BannerPromocional />}
       <div>{children}</div>
     </div>
   );

@@ -34,14 +34,9 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-6">
       <div className="w-full max-w-sm">
-        <div className="flex items-center gap-2.5 mb-8 justify-center">
-          <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center text-bg font-bold">
-            {NEGOCIO.emoji}
-          </div>
-          <div>
-            <div className="font-bold text-ink leading-tight">{NEGOCIO.nombreCorto}</div>
-            <div className="text-[11px] text-dim uppercase tracking-wide leading-tight">Crear cuenta de cliente</div>
-          </div>
+        <div className="flex flex-col items-center gap-3 mb-8">
+          <img src="/logo-argentina-express.webp" alt={NEGOCIO.nombre} className="h-16 object-contain" />
+          <div className="text-[11px] text-dim uppercase tracking-wide">Crear cuenta de cliente</div>
         </div>
         <div className="card p-6">
           <div className="eyebrow">Nuevo aquí</div>

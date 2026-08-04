@@ -5,25 +5,28 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { NEGOCIO } from "@/lib/config";
 
-export default function LoginPage() {
-  const [email, setEmail] = useState("");
+export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [password2, setPassword2] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
 
   const submit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
+    if (password.length < 6) return setError("La contraseña tiene que tener al menos 6 caracteres.");
+    if (password !== password2) return setError("Las contraseñas no coinciden.");
+
+    setLoading(true);
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
+    const { error } = await supabase.auth.updateUser({ password });
     setLoading(false);
+
     if (error) {
-      setError("Email o contraseña incorrectos.");
+      setError(
+        "No pudimos actualizar la contraseña. El link puede haber vencido — pedí uno nuevo desde 'Olvidé mi contraseña'."
+      );
       return;
     }
     router.push("/panel");
@@ -35,51 +38,43 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center gap-3 mb-8">
           <img src="/logo-argentina-express.webp" alt={NEGOCIO.nombre} className="h-16 object-contain" />
-          <div className="text-[11px] text-dim uppercase tracking-wide">Gestión de reparaciones</div>
         </div>
         <div className="card p-6">
           <div className="eyebrow">Acceso</div>
-          <h1 className="text-lg font-bold text-ink mb-5">Iniciar sesión</h1>
+          <h1 className="text-lg font-bold text-ink mb-5">Elegí tu nueva contraseña</h1>
           <form onSubmit={submit}>
             <label className="block mb-4">
-              <span className="block text-xs font-semibold uppercase tracking-wide text-muted mb-1.5">Email</span>
+              <span className="block text-xs font-semibold uppercase tracking-wide text-muted mb-1.5">
+                Nueva contraseña
+              </span>
               <input
-                type="email"
+                type="password"
                 required
+                minLength={6}
                 className="input"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 autoFocus
               />
             </label>
             <label className="block mb-4">
               <span className="block text-xs font-semibold uppercase tracking-wide text-muted mb-1.5">
-                Contraseña
+                Repetila
               </span>
               <input
                 type="password"
                 required
+                minLength={6}
                 className="input"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={password2}
+                onChange={(e) => setPassword2(e.target.value)}
               />
             </label>
             {error && <div className="text-bad text-xs mb-4">{error}</div>}
             <button type="submit" disabled={loading} className="btn w-full">
-              {loading ? "Ingresando..." : "Ingresar"}
+              {loading ? "Guardando..." : "Guardar nueva contraseña"}
             </button>
           </form>
-          <p className="text-xs text-dim text-center mt-3">
-            <a href="/forgot-password" className="text-accent hover:underline">
-              ¿Olvidaste tu contraseña?
-            </a>
-          </p>
-        </div>
-        <div className="mt-4 text-center text-xs text-dim">
-          ¿Sos cliente y todavía no tenés cuenta?{" "}
-          <a href="/signup" className="text-accent font-semibold hover:underline">
-            Creá tu cuenta
-          </a>
         </div>
       </div>
     </div>

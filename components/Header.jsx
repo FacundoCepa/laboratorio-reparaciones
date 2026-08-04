@@ -14,7 +14,9 @@ export default function Header({ nombre, role }) {
     { href: "/panel", label: "Panel" },
     { href: "/cargar", label: "Cargar equipo" },
     { href: "/equipos", label: "Equipos" },
+    { href: "/entregados", label: "Entregados" },
     { href: "/historial", label: "Historial" },
+    { href: "/usuarios", label: "Usuarios" },
   ];
   const clientTabs = [
     { href: "/mis-equipos", label: "Mis equipos" },
@@ -32,9 +34,7 @@ export default function Header({ nombre, role }) {
   return (
     <div className="border-b border-border bg-[#211F1C] sticky top-0 z-10">
       <div className="max-w-5xl mx-auto px-5 py-3 flex items-center justify-between gap-4">
-        <div className="font-bold text-ink text-sm">
-          {NEGOCIO.emoji} {NEGOCIO.nombreCorto}
-        </div>
+        <img src="/logo-argentina-express.webp" alt={NEGOCIO.nombreCorto} className="h-7 object-contain" />
         <div className="flex items-center gap-1 bg-bg p-1 rounded-lg border border-border2">
           {tabs.map((t) => (
             <Link
