@@ -18,6 +18,10 @@ export default function CargarForm({ isStaff, clientes }) {
     try {
       const formData = new FormData(formRef.current);
       const res = await registrarEquipo(formData);
+      if (res.error) {
+        setError(res.error);
+        return;
+      }
       setResultado(res);
       formRef.current.reset();
     } catch (err) {

@@ -76,6 +76,12 @@ export default function LoginPage() {
             </button>
           </form>
         </div>
+        <div className="mt-4 text-center text-xs text-dim">
+          ¿Sos cliente y todavía no tenés cuenta?{" "}
+          <a href="/signup" className="text-accent font-semibold hover:underline">
+            Creá tu cuenta
+          </a>
+        </div>
       </div>
     </div>
   );
