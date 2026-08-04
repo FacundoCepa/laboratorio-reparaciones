@@ -16,15 +16,15 @@ export default function BannerPromocional() {
   const banner = BANNERS[i];
 
   return (
-    <div className="max-w-3xl mx-auto px-5 py-6">
+    <div className="max-w-md mx-auto px-5 py-6">
       <div className="text-[9px] uppercase tracking-widest text-dim mb-1.5 text-center">Publicidad</div>
       <a
         href={banner.href}
         target="_blank"
         rel="noreferrer"
-        className="block h-20 rounded-lg overflow-hidden border border-border2 bg-surface hover:border-accent transition flex items-center justify-center"
+        className="block rounded-lg overflow-hidden border border-border2 hover:border-accent transition"
       >
-        <img src={banner.image} alt={banner.alt} className="h-full w-full object-contain p-1.5" />
+        <img src={banner.image} alt={banner.alt} className="w-full h-auto block" />
       </a>
       {BANNERS.length > 1 && (
         <div className="flex justify-center gap-1.5 mt-1.5">
