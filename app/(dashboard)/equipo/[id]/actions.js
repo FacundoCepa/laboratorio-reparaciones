@@ -6,6 +6,39 @@ import { enviarNotificacionEstado, enviarEmail } from "@/lib/email";
 import { MSG_ESTADO } from "@/lib/estados";
 import { NEGOCIO } from "@/lib/config";
 
+export async function subirFotoEquipo(equipoId, formData) {
+  try {
+    const supabase = createClient();
+    const which = formData.get("which")?.toString(); // "frente" | "reverso"
+    const file = formData.get("foto");
+    if (!file || file.size === 0) return { error: "No se recibió ninguna imagen." };
+    if (which !== "frente" && which !== "reverso") return { error: "Posición de foto inválida." };
+
+    const { data: equipo } = await supabase.from("equipos").select("cliente_id").eq("id", equipoId).single();
+    if (!equipo) return { error: "Equipo no encontrado." };
+
+    const ext = file.name?.split(".").pop() || "jpg";
+    const path = `${equipo.cliente_id}/${which}-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage.from("equipos-fotos").upload(path, file, {
+      contentType: file.type,
+      upsert: false,
+    });
+    if (upErr) return { error: upErr.message };
+
+    const { data: pub } = supabase.storage.from("equipos-fotos").getPublicUrl(path);
+    const columna = which === "frente" ? "foto_frente_url" : "foto_reverso_url";
+
+    const { error: updErr } = await supabase.from("equipos").update({ [columna]: pub.publicUrl }).eq("id", equipoId);
+    if (updErr) return { error: updErr.message };
+
+    revalidatePath(`/equipo/${equipoId}`);
+    revalidatePath(`/mis-equipos/${equipoId}`);
+    return { ok: true, url: pub.publicUrl };
+  } catch (err) {
+    return { error: err.message || "Ocurrió un error al subir la foto." };
+  }
+}
+
 export async function cambiarEstado(equipoId, nuevoEstado) {
   const supabase = createClient();
 

@@ -5,6 +5,29 @@ import { registrarEquipo } from "./actions";
 import { TIPOS_EQUIPO } from "@/lib/estados";
 import { NEGOCIO } from "@/lib/config";
 
+function comprimirImagen(file, maxWidth = 1400, quality = 0.75) {
+  return new Promise((resolve, reject) => {
+    if (!file || file.size === 0) return resolve(null);
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = (e) => {
+      const img = new window.Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => resolve(blob), "image/jpeg", quality);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function CargarForm({ isStaff, clientes }) {
   const [nuevoCliente, setNuevoCliente] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -18,6 +41,14 @@ export default function CargarForm({ isStaff, clientes }) {
     setError("");
     try {
       const formData = new FormData(formRef.current);
+
+      const [frenteComprimida, reversoComprimida] = await Promise.all([
+        comprimirImagen(formData.get("foto_frente")),
+        comprimirImagen(formData.get("foto_reverso")),
+      ]);
+      if (frenteComprimida) formData.set("foto_frente", frenteComprimida, "frente.jpg");
+      if (reversoComprimida) formData.set("foto_reverso", reversoComprimida, "reverso.jpg");
+
       const res = await registrarEquipo(formData);
       if (res.error) {
         setError(res.error);
@@ -121,8 +152,14 @@ export default function CargarForm({ isStaff, clientes }) {
     );
   }
 
+  const bloquearEnterPrematuro = (e) => {
+    if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") {
+      e.preventDefault();
+    }
+  };
+
   return (
-    <form ref={formRef} onSubmit={submit}>
+    <form ref={formRef} onSubmit={submit} onKeyDown={bloquearEnterPrematuro}>
       {isStaff && (
         <div className="card p-5 mb-5">
           <div className="flex items-center justify-between mb-4">
