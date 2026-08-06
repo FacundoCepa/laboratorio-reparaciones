@@ -6,6 +6,31 @@ import { enviarNotificacionEstado, enviarEmail } from "@/lib/email";
 import { MSG_ESTADO } from "@/lib/estados";
 import { NEGOCIO } from "@/lib/config";
 
+export async function actualizarDetalleTecnico(equipoId, formData) {
+  try {
+    const supabase = createClient();
+
+    const { error } = await supabase
+      .from("equipos")
+      .update({
+        falla: formData.get("falla")?.toString().trim() || null,
+        bateria: formData.get("bateria")?.toString() || "no_tiene",
+        cargador: formData.get("cargador") === "on",
+        memoria: formData.get("memoria") === "on",
+        disco: formData.get("disco") === "on",
+        teclado: formData.get("teclado") === "on",
+      })
+      .eq("id", equipoId);
+
+    if (error) return { error: error.message };
+
+    revalidatePath(`/equipo/${equipoId}`);
+    return { ok: true };
+  } catch (err) {
+    return { error: err.message || "Ocurrió un error al guardar el detalle técnico." };
+  }
+}
+
 export async function subirFotoEquipo(equipoId, formData) {
   try {
     const supabase = createClient();

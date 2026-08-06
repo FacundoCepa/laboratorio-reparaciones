@@ -6,6 +6,7 @@ import EstadoActions from "./EstadoActions";
 import InformeForm from "./InformeForm";
 import PresupuestoForm from "./PresupuestoForm";
 import FotosForm from "./FotosForm";
+import DetalleTecnicoForm from "./DetalleTecnicoForm";
 import FotoAmpliable from "@/components/FotoAmpliable";
 
 export default async function EquipoDetallePage({ params }) {
@@ -72,16 +73,8 @@ export default async function EquipoDetallePage({ params }) {
 
           <div className="card p-5">
             <div className="eyebrow">Detalle técnico</div>
-            <div className="mt-3 space-y-2 text-sm">
-              <Row label="Falla reportada" value={equipo.falla || "—"} />
-              <Row
-                label="Batería"
-                value={equipo.bateria === "si" ? "Sí (removible)" : equipo.bateria === "interna" ? "Interna" : "No tiene"}
-              />
-              <Row label="Cargador" value={equipo.cargador ? "Sí" : "No"} />
-              <Row label="Memoria" value={equipo.memoria ? "Sí" : "No"} />
-              <Row label="Disco" value={equipo.disco ? "Sí" : "No"} />
-              <Row label="Teclado" value={equipo.teclado ? "Sí" : "No"} />
+            <div className="mt-3">
+              <DetalleTecnicoForm equipo={equipo} />
             </div>
           </div>
 
