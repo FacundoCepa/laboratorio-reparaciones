@@ -31,6 +31,71 @@ export async function actualizarDetalleTecnico(equipoId, formData) {
   }
 }
 
+export async function actualizarDatosEquipo(equipoId, formData) {
+  try {
+    const supabase = createClient();
+
+    const { error } = await supabase
+      .from("equipos")
+      .update({
+        tipo: formData.get("tipo")?.toString(),
+        marca: formData.get("marca")?.toString().trim(),
+        modelo: formData.get("modelo")?.toString().trim(),
+        serial: formData.get("serial")?.toString().trim(),
+      })
+      .eq("id", equipoId);
+
+    if (error) return { error: error.message };
+
+    revalidatePath(`/equipo/${equipoId}`);
+    revalidatePath("/equipos");
+    revalidatePath("/historial");
+    return { ok: true };
+  } catch (err) {
+    return { error: err.message || "Ocurrió un error al guardar los datos del equipo." };
+  }
+}
+
+export async function eliminarEquipo(equipoId) {
+  try {
+    const supabase = createClient();
+
+    const { data: equipo } = await supabase
+      .from("equipos")
+      .select("foto_frente_url, foto_reverso_url")
+      .eq("id", equipoId)
+      .single();
+
+    const { error } = await supabase.from("equipos").delete().eq("id", equipoId);
+    if (error) return { error: error.message };
+
+    // Limpieza de fotos en storage (no bloqueante si falla algo acá).
+    try {
+      const marker = "/equipos-fotos/";
+      const paths = [equipo?.foto_frente_url, equipo?.foto_reverso_url]
+        .filter(Boolean)
+        .map((url) => {
+          const idx = url.indexOf(marker);
+          return idx >= 0 ? url.slice(idx + marker.length) : null;
+        })
+        .filter(Boolean);
+      if (paths.length > 0) await supabase.storage.from("equipos-fotos").remove(paths);
+    } catch (e) {
+      console.error("No se pudieron borrar las fotos del storage:", e);
+    }
+
+    revalidatePath("/panel");
+    revalidatePath("/equipos");
+    revalidatePath("/historial");
+    revalidatePath("/entregados");
+    revalidatePath("/mis-equipos");
+
+    return { ok: true };
+  } catch (err) {
+    return { error: err.message || "Ocurrió un error al eliminar el equipo." };
+  }
+}
+
 export async function subirFotoEquipo(equipoId, formData) {
   try {
     const supabase = createClient();

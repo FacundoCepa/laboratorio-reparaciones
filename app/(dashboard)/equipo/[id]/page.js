@@ -7,6 +7,8 @@ import InformeForm from "./InformeForm";
 import PresupuestoForm from "./PresupuestoForm";
 import FotosForm from "./FotosForm";
 import DetalleTecnicoForm from "./DetalleTecnicoForm";
+import DatosEquipoForm from "./DatosEquipoForm";
+import EliminarEquipoBoton from "./EliminarEquipoBoton";
 import FotoAmpliable from "@/components/FotoAmpliable";
 
 export default async function EquipoDetallePage({ params }) {
@@ -43,12 +45,7 @@ export default async function EquipoDetallePage({ params }) {
       <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
         <div>
           <div className="eyebrow">Caso #{String(equipo.numero).padStart(5, "0")}</div>
-          <h1 className="text-2xl font-black text-ink">
-            {equipo.tipo} · {equipo.marca} {equipo.modelo}
-          </h1>
-          <p className="text-sm text-dim mt-1">
-            Cliente: {equipo.cliente?.nombre} · Serial: <span className="font-mono">{equipo.serial}</span>
-          </p>
+          <DatosEquipoForm equipo={equipo} />
         </div>
         <StatusPill color={estadoInfo(equipo.estado).color}>{estadoInfo(equipo.estado).label}</StatusPill>
       </div>
@@ -103,6 +100,12 @@ export default async function EquipoDetallePage({ params }) {
               Completalo cuando el equipo esté reparado o finalizado. Se puede editar e imprimir las veces que haga falta.
             </p>
             <InformeForm equipo={equipo} />
+          </div>
+
+          <div className="card p-5">
+            <div className="eyebrow text-bad">Zona de riesgo</div>
+            <p className="text-xs text-dim mt-1 mb-3">Por si se cargó mal o hay que empezar de nuevo con este caso.</p>
+            <EliminarEquipoBoton equipo={equipo} />
           </div>
         </div>
 
