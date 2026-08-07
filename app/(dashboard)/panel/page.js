@@ -21,8 +21,11 @@ export default async function PanelPage() {
   const all = equipos || [];
   const pendientes = all.filter((e) => e.estado === "registrado");
   const esperandoAvanzar = all.filter((e) => e.presupuesto_respuesta === "aceptado" && e.estado === "espera_presupuesto");
+  const entregasPendientes = all.filter(
+    (e) => e.estado !== "entregado" && Boolean(e.entregado_admin_at) !== Boolean(e.recibido_cliente_at)
+  );
   const enLab = all.filter((e) => !["registrado", "finalizado", "entrega"].includes(e.estado));
-  const listos = all.filter((e) => ["finalizado", "entrega"].includes(e.estado));
+  const listos = all.filter((e) => ["finalizado", "entrega", "entregado"].includes(e.estado));
 
   const Stat = ({ label, value, color }) => (
     <div className="card p-5 flex-1 min-w-[140px]">
@@ -63,6 +66,17 @@ export default async function PanelPage() {
         <Stat label="Listos / entrega" value={listos.length} color="#7FBF7F" />
         <Stat label="Total histórico" value={all.length} color="#6FA8DC" />
       </div>
+
+      {entregasPendientes.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-sm font-bold text-info mb-3">📦 Entregas — falta confirmación de una parte</h2>
+          <div className="space-y-2.5">
+            {entregasPendientes.map((e) => (
+              <EquipoRow key={e.id} e={e} />
+            ))}
+          </div>
+        </div>
+      )}
 
       {esperandoAvanzar.length > 0 && (
         <div className="mb-8">

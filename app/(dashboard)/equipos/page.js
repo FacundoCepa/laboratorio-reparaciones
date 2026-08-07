@@ -6,7 +6,7 @@ export default async function EquiposPage() {
   const { data: equipos } = await supabase
     .from("equipos")
     .select("*, cliente:profiles!equipos_cliente_id_fkey(nombre)")
-    .not("estado", "in", "(finalizado,entrega)")
+    .not("estado", "in", "(finalizado,entrega,entregado)")
     .order("numero", { ascending: false });
 
   return (

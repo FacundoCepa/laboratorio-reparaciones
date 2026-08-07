@@ -36,12 +36,27 @@ export async function actualizarPerfil(userId, formData) {
   if (!staff) return { error: "No autorizado." };
 
   const admin = createAdminClient();
+  const nuevoEmail = formData.get("email")?.toString().trim();
+  const nombre = formData.get("nombre")?.toString().trim();
+  const telefono = formData.get("telefono")?.toString().trim() || null;
+
+  if (!nuevoEmail || !nombre) return { error: "Nombre y email son obligatorios." };
+
+  // Si cambió el email, primero lo actualizamos en el sistema de login.
+  const { error: authErr } = await admin.auth.admin.updateUserById(userId, {
+    email: nuevoEmail,
+    email_confirm: true,
+  });
+  if (authErr) {
+    if (authErr.code === "email_exists") {
+      return { error: `Ese email (${nuevoEmail}) ya lo está usando otra cuenta.` };
+    }
+    return { error: `No se pudo actualizar el email: ${authErr.message}` };
+  }
+
   const { error } = await admin
     .from("profiles")
-    .update({
-      nombre: formData.get("nombre")?.toString().trim(),
-      telefono: formData.get("telefono")?.toString().trim() || null,
-    })
+    .update({ nombre, telefono, email: nuevoEmail })
     .eq("id", userId);
 
   if (error) return { error: error.message };

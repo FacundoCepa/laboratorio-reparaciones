@@ -68,9 +68,13 @@ export default function UsuariosTable({ usuarios }) {
             {abierto === u.id && (
               <div className="mt-4 pt-4 border-t border-border2 space-y-4">
                 <form onSubmit={(e) => guardarPerfil(u.id, e)} className="grid grid-cols-2 gap-3">
+                  <label className="block col-span-2">
+                    <span className="block text-[11px] uppercase tracking-wide text-muted mb-1">Email</span>
+                    <input name="email" type="email" defaultValue={u.email} className="input" required />
+                  </label>
                   <label className="block">
                     <span className="block text-[11px] uppercase tracking-wide text-muted mb-1">Nombre</span>
-                    <input name="nombre" defaultValue={u.nombre} className="input" />
+                    <input name="nombre" defaultValue={u.nombre} className="input" required />
                   </label>
                   <label className="block">
                     <span className="block text-[11px] uppercase tracking-wide text-muted mb-1">Teléfono</span>

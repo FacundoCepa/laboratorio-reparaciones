@@ -31,6 +31,60 @@ export async function actualizarDetalleTecnico(equipoId, formData) {
   }
 }
 
+export async function marcarEntregadoAdmin(equipoId) {
+  try {
+    const supabase = createClient();
+    const { data: equipo, error: fetchErr } = await supabase
+      .from("equipos")
+      .select("*, cliente:profiles!equipos_cliente_id_fkey(nombre, email)")
+      .eq("id", equipoId)
+      .single();
+    if (fetchErr || !equipo) return { error: "Equipo no encontrado." };
+
+    const patch = { entregado_admin_at: new Date().toISOString() };
+    const finalizarAhora = Boolean(equipo.recibido_cliente_at);
+    if (finalizarAhora) patch.estado = "entregado";
+
+    const { error } = await supabase.from("equipos").update(patch).eq("id", equipoId);
+    if (error) return { error: error.message };
+
+    if (finalizarAhora) {
+      await supabase.from("historial_estados").insert({ equipo_id: equipoId, estado: "entregado" });
+    }
+
+    const nombre = equipo.cliente?.nombre?.split(" ")[0] || "cliente";
+    const texto = finalizarAhora
+      ? `¡Listo ${nombre}! Quedó confirmada la entrega de tu equipo (caso #${equipo.numero}).`
+      : `Hola ${nombre}, marcamos tu equipo (caso #${equipo.numero}) como entregado. ¿Lo recibiste? Confirmalo desde tu cuenta.`;
+
+    await supabase.from("notificaciones").insert({ equipo_id: equipoId, texto, canal: "email" });
+
+    if (equipo.cliente?.email) {
+      await enviarEmail({
+        to: equipo.cliente.email,
+        subject: `${NEGOCIO.nombreCorto} — ${finalizarAhora ? "Entrega confirmada" : "¿Recibiste tu equipo?"} (Caso #${String(equipo.numero).padStart(5, "0")})`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 480px; margin: auto;">
+            <p style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#999;">${NEGOCIO.nombre}</p>
+            <h2 style="color:#E8873A;">Caso #${String(equipo.numero).padStart(5, "0")}</h2>
+            <p style="font-size:15px; color:#222;">${texto}</p>
+          </div>
+        `,
+      });
+    }
+
+    revalidatePath(`/equipo/${equipoId}`);
+    revalidatePath(`/mis-equipos/${equipoId}`);
+    revalidatePath("/panel");
+    revalidatePath("/equipos");
+    revalidatePath("/entregados");
+
+    return { ok: true, finalizado: finalizarAhora };
+  } catch (err) {
+    return { error: err.message || "Ocurrió un error." };
+  }
+}
+
 export async function actualizarDatosEquipo(equipoId, formData) {
   try {
     const supabase = createClient();

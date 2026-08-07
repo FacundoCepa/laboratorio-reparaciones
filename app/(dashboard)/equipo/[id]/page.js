@@ -9,6 +9,7 @@ import FotosForm from "./FotosForm";
 import DetalleTecnicoForm from "./DetalleTecnicoForm";
 import DatosEquipoForm from "./DatosEquipoForm";
 import EliminarEquipoBoton from "./EliminarEquipoBoton";
+import EntregaAdmin from "./EntregaAdmin";
 import FotoAmpliable from "@/components/FotoAmpliable";
 
 export default async function EquipoDetallePage({ params }) {
@@ -115,6 +116,10 @@ export default async function EquipoDetallePage({ params }) {
             <div className="mt-4">
               <ProgressRail estadoActual={equipo.estado} historial={historial || []} />
             </div>
+          </div>
+
+          <div className="mb-5">
+            <EntregaAdmin equipo={equipo} />
           </div>
 
           <div className="card p-5">
