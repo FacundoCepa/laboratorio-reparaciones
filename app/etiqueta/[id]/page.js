@@ -33,6 +33,12 @@ export default async function EtiquetaPage({ params }) {
           {equipo.tipo} · {equipo.marca} {equipo.modelo}
         </div>
         <div className="text-4xl font-black tracking-wide my-2">#{String(equipo.numero).padStart(5, "0")}</div>
+        {equipo.falla && (
+          <div className="border-2 border-black rounded p-2 my-2 text-left">
+            <div className="text-[9px] uppercase tracking-widest text-gray-500">Falla reportada</div>
+            <div className="text-[15px] font-bold leading-snug">{equipo.falla}</div>
+          </div>
+        )}
         {lineas.map(([label, value]) => (
           <div key={label} className="flex justify-between text-[11px] py-1 border-b border-dotted border-gray-400">
             <span>{label}</span>

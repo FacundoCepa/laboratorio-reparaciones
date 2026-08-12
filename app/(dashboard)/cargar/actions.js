@@ -2,6 +2,9 @@
 
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { enviarEmail } from "@/lib/email";
+import { MSG_ESTADO } from "@/lib/estados";
+import { NEGOCIO } from "@/lib/config";
 
 function randomSerial() {
   return (
@@ -95,6 +98,11 @@ export async function registrarEquipo(formData) {
 
     const serial = formData.get("serial")?.toString().trim() || randomSerial();
 
+    // Si lo carga el staff, el equipo ya está físicamente en el laboratorio
+    // (por eso arranca en "recibido"). Si lo carga el cliente desde su casa,
+    // todavía no llegó, así que arranca en "registrado".
+    const estadoInicial = isStaff ? "recibido" : "registrado";
+
     const { data: equipo, error } = await supabase
       .from("equipos")
       .insert({
@@ -111,14 +119,33 @@ export async function registrarEquipo(formData) {
         teclado: formData.get("teclado") === "on",
         foto_frente_url: fotoFrenteUrl,
         foto_reverso_url: fotoReversoUrl,
-        estado: "registrado",
+        estado: estadoInicial,
       })
       .select()
       .single();
 
     if (error) return { error: `No se pudo guardar el equipo: ${error.message}` };
 
-    await supabase.from("historial_estados").insert({ equipo_id: equipo.id, estado: "registrado" });
+    await supabase.from("historial_estados").insert({ equipo_id: equipo.id, estado: estadoInicial });
+
+    if (isStaff) {
+      const { data: clientePerfil } = await supabase.from("profiles").select("nombre, email").eq("id", clienteId).single();
+      if (clientePerfil?.email && MSG_ESTADO.recibido) {
+        const texto = MSG_ESTADO.recibido(clientePerfil.nombre?.split(" ")[0] || "cliente", equipo.numero);
+        await supabase.from("notificaciones").insert({ equipo_id: equipo.id, texto, canal: "email" });
+        await enviarEmail({
+          to: clientePerfil.email,
+          subject: `${NEGOCIO.nombreCorto} — Equipo recibido (Caso #${String(equipo.numero).padStart(5, "0")})`,
+          html: `
+            <div style="font-family: sans-serif; max-width: 480px; margin: auto;">
+              <p style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#999;">${NEGOCIO.nombre}</p>
+              <h2 style="color:#E8873A;">Caso #${String(equipo.numero).padStart(5, "0")}</h2>
+              <p style="font-size:15px; color:#222;">${texto}</p>
+            </div>
+          `,
+        });
+      }
+    }
 
     revalidatePath("/panel");
     revalidatePath("/equipos");
