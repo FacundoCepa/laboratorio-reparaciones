@@ -60,7 +60,7 @@ export default function DetalleTecnicoForm({ equipo }) {
         </select>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
         {[
           ["cargador", "Cargador"],
           ["memoria", "Memoria"],

@@ -50,7 +50,7 @@ export default function DatosEquipoForm({ equipo }) {
 
   return (
     <form ref={formRef} onSubmit={submit} className="card p-4 max-w-md">
-      <div className="grid grid-cols-2 gap-3 mb-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
         <label className="block">
           <span className="block text-[11px] uppercase tracking-wide text-muted mb-1">Tipo</span>
           <select name="tipo" className="input" defaultValue={datos.tipo}>

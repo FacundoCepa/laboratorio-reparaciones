@@ -40,7 +40,7 @@ export default function ListaEquipos({ equipos, title, emptyMsg, searchable = tr
           {filtered.map((e) => (
             <Link key={e.id} href={`${hrefBase}/${e.id}`} className="block">
               <div className="card p-4 hover:border-accent transition">
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="text-[10px] font-mono text-dim mb-0.5">
                       CASO #{String(e.numero).padStart(5, "0")}

@@ -33,33 +33,35 @@ export default function Header({ nombre, role }) {
 
   return (
     <div className="border-b border-border bg-[#211F1C] sticky top-0 z-10">
-      <div className="max-w-5xl mx-auto px-5 py-3 flex items-center justify-between gap-4">
-        <img src="/logo-argentina-express.webp" alt={NEGOCIO.nombreCorto} className="h-7 object-contain" />
-        <div className="flex items-center gap-1 bg-bg p-1 rounded-lg border border-border2">
-          {tabs.map((t) => (
-            <Link
-              key={t.href}
-              href={t.href}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition ${
-                pathname === t.href ? "bg-accent text-bg" : "text-muted hover:text-ink"
-              }`}
-            >
-              {t.label}
-            </Link>
-          ))}
-        </div>
-        <div className="flex items-center gap-3">
+      <div className="max-w-5xl mx-auto px-4 sm:px-5 py-3 flex items-center justify-between gap-3">
+        <img src="/logo-argentina-express.webp" alt={NEGOCIO.nombreCorto} className="h-6 sm:h-7 object-contain shrink-0" />
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <div className="text-right hidden sm:block">
             <div className="text-xs font-semibold text-ink">{nombre}</div>
             <div className="text-[10px] text-dim uppercase">{role}</div>
           </div>
           <button
             onClick={logout}
-            className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-muted hover:text-bad hover:border-[#5c3a35]"
+            className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-muted hover:text-bad hover:border-[#5c3a35] shrink-0"
             title="Cerrar sesión"
           >
             ⏻
           </button>
+        </div>
+      </div>
+      <div className="max-w-5xl mx-auto px-4 sm:px-5 pb-3 -mt-1">
+        <div className="flex items-center gap-1 bg-bg p-1 rounded-lg border border-border2 overflow-x-auto">
+          {tabs.map((t) => (
+            <Link
+              key={t.href}
+              href={t.href}
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition whitespace-nowrap shrink-0 ${
+                pathname === t.href ? "bg-accent text-bg" : "text-muted hover:text-ink"
+              }`}
+            >
+              {t.label}
+            </Link>
+          ))}
         </div>
       </div>
     </div>

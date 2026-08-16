@@ -1,10 +1,11 @@
-import { ESTADOS, estadoIndex } from "@/lib/estados";
+import { ESTADOS, estadoIndex, pasosParaRiel } from "@/lib/estados";
 
 export default function ProgressRail({ estadoActual, historial = [] }) {
   const idx = estadoIndex(estadoActual);
+  const pasos = pasosParaRiel(estadoActual);
   return (
     <div>
-      {ESTADOS.map((e, i) => {
+      {pasos.map((e, i) => {
         const done = i < idx;
         const active = i === idx;
         const h = historial.find((x) => x.estado === e.key);
@@ -17,7 +18,7 @@ export default function ProgressRail({ estadoActual, historial = [] }) {
               >
                 {done ? "✓" : ""}
               </div>
-              {i < ESTADOS.length - 1 && (
+              {i < pasos.length - 1 && (
                 <div
                   className="w-px flex-1 min-h-[22px]"
                   style={{ backgroundColor: done ? e.color : "#3a372f" }}

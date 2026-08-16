@@ -24,8 +24,8 @@ export default async function EtiquetaPage({ params }) {
   ];
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-6">
-      <div id="etiqueta" className="w-[320px] border-2 border-dashed border-black p-4 font-mono text-black">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div id="etiqueta" className="w-full max-w-[320px] border-2 border-dashed border-black p-4 font-mono text-black">
         <div className="text-[10px] tracking-widest uppercase text-gray-500">
           {NEGOCIO.nombre} · Etiqueta
         </div>

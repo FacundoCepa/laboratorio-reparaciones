@@ -20,8 +20,8 @@ export default async function InformePage({ params }) {
     : new Date().toLocaleDateString("es-AR");
 
   return (
-    <div className="min-h-screen bg-white text-black flex items-center justify-center p-6">
-      <div id="etiqueta" className="w-[560px] p-8 font-sans text-[13px] leading-relaxed">
+    <div className="min-h-screen bg-white text-black flex items-center justify-center p-4">
+      <div id="etiqueta" className="w-full max-w-[560px] p-5 sm:p-8 font-sans text-[13px] leading-relaxed">
         <div className="flex items-center justify-between border-b-2 border-black pb-4 mb-5">
           <div>
             <div className="text-lg font-black">{NEGOCIO.nombre}</div>
@@ -33,7 +33,7 @@ export default async function InformePage({ params }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
           <div>
             <div className="text-[10px] uppercase tracking-wide text-gray-500 mb-1">Cliente</div>
             <div className="font-semibold">{equipo.cliente?.nombre || "—"}</div>
@@ -87,7 +87,7 @@ export default async function InformePage({ params }) {
           <div className="text-[12px] text-gray-600 mb-6">Técnico responsable: {equipo.tecnico_nombre}</div>
         )}
 
-        <div className="grid grid-cols-2 gap-8 mt-10 pt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-10 pt-4">
           <div className="text-center">
             <div className="border-t border-black pt-1 text-[11px] text-gray-500">Entregado por</div>
           </div>

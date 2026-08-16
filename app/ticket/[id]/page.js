@@ -18,8 +18,8 @@ export default async function TicketPage({ params }) {
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(siteUrl + "/login")}`;
 
   return (
-    <div className="min-h-screen bg-white text-black flex items-center justify-center p-6">
-      <div id="etiqueta" className="w-[340px] border-2 border-dashed border-black p-5 font-mono text-black">
+    <div className="min-h-screen bg-white text-black flex items-center justify-center p-4">
+      <div id="etiqueta" className="w-full max-w-[340px] border-2 border-dashed border-black p-5 font-mono text-black">
         <div className="text-[10px] tracking-widest uppercase text-gray-500 text-center">{NEGOCIO.nombre}</div>
         <div className="text-sm font-bold uppercase text-center mt-1 mb-3 pb-2 border-b border-black">
           Comprobante de registro

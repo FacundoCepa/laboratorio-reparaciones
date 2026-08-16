@@ -174,7 +174,7 @@ export default function CargarForm({ isStaff, clientes }) {
           </div>
           <input type="hidden" name="nuevo_cliente" value={nuevoCliente ? "on" : "off"} />
           {nuevoCliente ? (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <label className="block">
                 <span className="block text-xs font-semibold uppercase tracking-wide text-muted mb-1.5">
                   Nombre completo *
@@ -214,7 +214,7 @@ export default function CargarForm({ isStaff, clientes }) {
 
       <div className="card p-5 mb-5">
         <div className="eyebrow">Datos del equipo</div>
-        <div className="grid grid-cols-2 gap-4 mt-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
           <label className="block">
             <span className="block text-xs font-semibold uppercase tracking-wide text-muted mb-1.5">
               Tipo de equipo *
@@ -260,7 +260,7 @@ export default function CargarForm({ isStaff, clientes }) {
             <option value="no_tiene">No tiene</option>
           </select>
         </div>
-        <div className="grid grid-cols-2 gap-3 mt-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
           {[
             ["cargador", "Cargador"],
             ["memoria", "Memoria"],
@@ -277,7 +277,7 @@ export default function CargarForm({ isStaff, clientes }) {
 
       <div className="card p-5 mb-6">
         <div className="eyebrow">Fotos del equipo</div>
-        <div className="grid grid-cols-2 gap-4 mt-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
           <label className="block">
             <span className="block text-xs text-dim mb-1.5">Foto de frente</span>
             <input type="file" name="foto_frente" accept="image/*" capture="environment" className="input" />

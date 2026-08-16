@@ -65,7 +65,7 @@ export default function InformeForm({ equipo }) {
         />
       </label>
 
-      <div className="grid grid-cols-2 gap-3 mb-1">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-1">
         <label className="block">
           <span className="block text-xs font-semibold uppercase tracking-wide text-muted mb-1.5">
             Costo mano de obra ($)
@@ -99,7 +99,7 @@ export default function InformeForm({ equipo }) {
         Total: ${total.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
         <label className="block">
           <span className="block text-xs font-semibold uppercase tracking-wide text-muted mb-1.5">
             Garantía (días)

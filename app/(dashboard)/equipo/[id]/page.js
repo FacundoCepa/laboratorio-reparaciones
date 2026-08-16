@@ -79,7 +79,7 @@ export default async function EquipoDetallePage({ params }) {
           <div className="card p-5">
             <div className="eyebrow">Fotos</div>
             <p className="text-xs text-dim mt-1 mb-3">Tocá una foto para verla en grande.</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <FotoAmpliable src={equipo.foto_frente_url} alt="Foto de frente" />
                 <div className="mt-2">
