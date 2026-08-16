@@ -22,7 +22,8 @@ export default async function PanelPage() {
   const pendientes = all.filter((e) => e.estado === "registrado");
   const esperandoAvanzar = all.filter((e) => e.presupuesto_respuesta === "aceptado" && e.estado === "espera_presupuesto");
   const enLab = all.filter((e) => !["registrado", "finalizado", "entrega"].includes(e.estado));
-  const listos = all.filter((e) => ["finalizado", "entrega", "entregado"].includes(e.estado));
+  const finalizados = all.filter((e) => e.estado === "finalizado");
+  const entregados = all.filter((e) => ["entrega", "entregado"].includes(e.estado));
 
   const Stat = ({ label, value, color }) => (
     <div className="card p-5 flex-1 min-w-[140px]">
@@ -60,7 +61,8 @@ export default async function PanelPage() {
       <div className="flex gap-3 flex-wrap mb-8">
         <Stat label="Pendientes de ingreso" value={pendientes.length} color="#8a8578" />
         <Stat label="En laboratorio" value={enLab.length} color="#E8873A" />
-        <Stat label="Listos / entrega" value={listos.length} color="#7FBF7F" />
+        <Stat label="Finalizados" value={finalizados.length} color="#7FBF7F" />
+        <Stat label="En entrega / entregados" value={entregados.length} color="#6FA8DC" />
         <Stat label="Total histórico" value={all.length} color="#6FA8DC" />
       </div>
 

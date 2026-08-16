@@ -14,6 +14,7 @@ export default function Header({ nombre, role }) {
     { href: "/panel", label: "Panel" },
     { href: "/cargar", label: "Cargar equipo" },
     { href: "/equipos", label: "Equipos" },
+    { href: "/finalizados", label: "Finalizados" },
     { href: "/entregados", label: "Entregados" },
     { href: "/historial", label: "Historial" },
     { href: "/usuarios", label: "Usuarios" },
