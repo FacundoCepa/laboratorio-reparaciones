@@ -2,7 +2,7 @@ import { ESTADOS, estadoIndex, pasosParaRiel } from "@/lib/estados";
 
 export default function ProgressRail({ estadoActual, historial = [] }) {
   const idx = estadoIndex(estadoActual);
-  const pasos = pasosParaRiel(estadoActual);
+  const pasos = pasosParaRiel(estadoActual, historial);
   return (
     <div>
       {pasos.map((e, i) => {
