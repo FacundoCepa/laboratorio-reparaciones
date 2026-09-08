@@ -20,7 +20,7 @@ export default async function InformePage({ params }) {
     : new Date().toLocaleDateString("es-AR");
 
   return (
-    <div className="min-h-screen bg-white text-black flex items-center justify-center p-4">
+    <div className="min-h-screen print:min-h-0 bg-white text-black flex items-center justify-center p-4 print:p-0">
       <div id="etiqueta" className="w-full max-w-[560px] p-5 sm:p-8 font-sans text-[13px] leading-relaxed">
         <div className="flex items-center justify-between border-b-2 border-black pb-4 mb-5">
           <div>

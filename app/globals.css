@@ -26,9 +26,3 @@ body {
 .eyebrow {
   @apply text-[10px] tracking-[0.2em] uppercase text-muted font-semibold mb-1;
 }
-
-@media print {
-  body * { visibility: hidden; }
-  #etiqueta, #etiqueta * { visibility: visible; }
-  #etiqueta { position: absolute; top: 0; left: 0; }
-}

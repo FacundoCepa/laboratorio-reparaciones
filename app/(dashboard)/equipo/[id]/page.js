@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import StatusPill from "@/components/StatusPill";
 import ProgressRail from "@/components/ProgressRail";
+import Seccion from "@/components/Seccion";
 import { ESTADOS, estadoInfo, estadoIndex } from "@/lib/estados";
 import EstadoActions from "./EstadoActions";
 import InformeForm from "./InformeForm";
@@ -37,6 +38,9 @@ export default async function EquipoDetallePage({ params }) {
   const idx = estadoIndex(equipo.estado);
   const nextEstado = ESTADOS[idx + 1];
 
+  const presupuestoRelevante = ["presupuesto", "espera_presupuesto"].includes(equipo.estado);
+  const fotosCount = (equipo.foto_frente_url ? 1 : 0) + (equipo.foto_reverso_url ? 1 : 0);
+
   return (
     <div className="max-w-4xl mx-auto px-5 py-8">
       <a href="/equipos" className="text-sm text-muted hover:text-ink mb-5 inline-block">
@@ -52,32 +56,26 @@ export default async function EquipoDetallePage({ params }) {
       </div>
 
       <div className="grid md:grid-cols-[1fr_1.3fr] gap-6">
-        <div className="space-y-5">
-          <div className="card p-5">
-            <div className="eyebrow">Acciones</div>
+        <div className="space-y-3">
+          <Seccion title="Acciones" defaultOpen>
             <EstadoActions equipoId={equipo.id} estadoActual={equipo.estado} nextEstado={nextEstado} />
             <a href={`/etiqueta/${equipo.id}`} target="_blank" rel="noreferrer" className="btn-ghost w-full mt-2">
               🖨️ Ver / reimprimir etiqueta
             </a>
-          </div>
+          </Seccion>
 
-          <div className="card p-5">
-            <div className="eyebrow">Presupuesto</div>
+          <Seccion title="Presupuesto" defaultOpen={presupuestoRelevante}>
             <p className="text-xs text-dim mt-1 mb-3">
               Armalo y envialo cuando el caso esté en "Elaborando presupuesto".
             </p>
             <PresupuestoForm equipo={equipo} />
-          </div>
+          </Seccion>
 
-          <div className="card p-5">
-            <div className="eyebrow">Detalle técnico</div>
-            <div className="mt-3">
-              <DetalleTecnicoForm equipo={equipo} />
-            </div>
-          </div>
+          <Seccion title="Detalle técnico">
+            <DetalleTecnicoForm equipo={equipo} />
+          </Seccion>
 
-          <div className="card p-5">
-            <div className="eyebrow">Fotos</div>
+          <Seccion title="Fotos" badge={`${fotosCount}/2`}>
             <p className="text-xs text-dim mt-1 mb-3">Tocá una foto para verla en grande.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
@@ -93,38 +91,30 @@ export default async function EquipoDetallePage({ params }) {
                 </div>
               </div>
             </div>
-          </div>
+          </Seccion>
 
-          <div className="card p-5">
-            <div className="eyebrow">Informe de reparación y costo</div>
+          <Seccion title="Informe de reparación y costo">
             <p className="text-xs text-dim mt-1 mb-3">
               Completalo cuando el equipo esté reparado o finalizado. Se puede editar e imprimir las veces que haga falta.
             </p>
             <InformeForm equipo={equipo} />
-          </div>
+          </Seccion>
 
-          <div className="card p-5">
-            <div className="eyebrow text-bad">Zona de riesgo</div>
+          <Seccion title="Zona de riesgo">
             <p className="text-xs text-dim mt-1 mb-3">Por si se cargó mal o hay que empezar de nuevo con este caso.</p>
             <EliminarEquipoBoton equipo={equipo} />
-          </div>
+          </Seccion>
         </div>
 
-        <div>
-          <div className="card p-5 mb-5">
-            <div className="eyebrow">Seguimiento</div>
-            <div className="mt-4">
-              <ProgressRail estadoActual={equipo.estado} historial={historial || []} />
-            </div>
-          </div>
+        <div className="space-y-3">
+          <Seccion title="Seguimiento" defaultOpen>
+            <ProgressRail estadoActual={equipo.estado} historial={historial || []} />
+          </Seccion>
 
-          <div className="mb-5">
-            <EntregaAdmin equipo={equipo} />
-          </div>
+          <EntregaAdmin equipo={equipo} />
 
-          <div className="card p-5">
-            <div className="eyebrow">Notificaciones enviadas</div>
-            <div className="space-y-2 mt-3">
+          <Seccion title="Notificaciones enviadas" badge={notificaciones?.length || 0}>
+            <div className="space-y-2 mt-1">
               {(!notificaciones || notificaciones.length === 0) && (
                 <p className="text-xs text-dim">Aún no se enviaron notificaciones.</p>
               )}
@@ -137,7 +127,7 @@ export default async function EquipoDetallePage({ params }) {
                 </div>
               ))}
             </div>
-          </div>
+          </Seccion>
         </div>
       </div>
     </div>
