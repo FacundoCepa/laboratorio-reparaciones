@@ -100,6 +100,8 @@ calma la primera vez. Se hace una sola vez.
    | `SUPABASE_SERVICE_ROLE_KEY` | la service role key de Supabase |
    | `RESEND_API_KEY` | tu API key de Resend |
    | `EMAIL_FROM` | `Laboratorio <notificaciones@tu-dominio.com>` |
+   | `ARGEX_API_URL` | `https://argentina-express-erp.vercel.app` |
+   | `ARGEX_API_KEY` | la misma clave que `LABORATORIO_API_KEY` en Argentina Express |
 
 4. Tocá **Deploy** y esperá unos minutos. Al terminar te da una URL tipo
    `laboratorio-reparaciones.vercel.app` — ya está online y funcionando.
@@ -125,6 +127,23 @@ calma la primera vez. Se hace una sola vez.
    vista de seguimiento
 
 ---
+
+## Botón "Pasar venta al sistema"
+
+En el informe de cada equipo hay un botón para cargar esa reparación
+como venta en Argentina Express (cliente, número de caso, mano de obra
+y repuesto), sin tener que volver a tipear nada ahí. Para que funcione:
+
+1. Corré `supabase/migration_007_venta_erp.sql` en Supabase (igual que
+   las migraciones anteriores).
+2. Cargá `ARGEX_API_URL` y `ARGEX_API_KEY` en Vercel (tabla de arriba).
+3. En Argentina Express, el administrador tiene que tener cargado
+   `LABORATORIO_API_KEY` con el mismo valor que `ARGEX_API_KEY` acá.
+
+El botón queda deshabilitado hasta que se cargue un costo de mano de
+obra mayor a 0 en el informe, y una vez pasada la venta muestra el
+número con el que quedó en Argentina Express (no se puede volver a
+pasar dos veces la misma).
 
 ## Qué quedó pendiente / próximos pasos posibles
 
