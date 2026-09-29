@@ -21,7 +21,7 @@ export default async function PanelPage() {
   const all = equipos || [];
   const pendientes = all.filter((e) => e.estado === "registrado");
   const esperandoAvanzar = all.filter((e) => e.presupuesto_respuesta === "aceptado" && e.estado === "espera_presupuesto");
-  const enLab = all.filter((e) => !["registrado", "finalizado", "entrega"].includes(e.estado));
+  const enLab = all.filter((e) => !["registrado", "finalizado", "entrega", "entregado"].includes(e.estado));
   const finalizados = all.filter((e) => e.estado === "finalizado");
   const entregados = all.filter((e) => ["entrega", "entregado"].includes(e.estado));
 
