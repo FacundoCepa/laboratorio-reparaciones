@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { getTallerPorSlug, tallerHabilitado } from "@/lib/taller";
 
 export async function crearCuentaCliente(formData) {
   try {
@@ -11,6 +12,9 @@ export async function crearCuentaCliente(formData) {
 
     if (!nombre || !email || !password) return { error: "Completá todos los campos obligatorios." };
     if (password.length < 6) return { error: "La contraseña tiene que tener al menos 6 caracteres." };
+
+    const taller = await getTallerPorSlug(formData.get("taller_slug")?.toString());
+    if (!taller || !tallerHabilitado(taller)) return { error: "El taller no está disponible. Pedile el link correcto." };
 
     const admin = createAdminClient();
 
@@ -30,11 +34,15 @@ export async function crearCuentaCliente(formData) {
     const { error: profileErr } = await admin.from("profiles").insert({
       id: created.user.id,
       role: "cliente",
+      taller_id: taller.id,
       nombre,
       email,
       telefono: telefono || null,
     });
-    if (profileErr) return { error: `Cuenta creada pero falló el perfil: ${profileErr.message}` };
+    if (profileErr) {
+      await admin.auth.admin.deleteUser(created.user.id);
+      return { error: `No se pudo crear la cuenta: ${profileErr.message}` };
+    }
 
     // Iniciamos sesión automáticamente para que quede logueado sin pasos extra.
     const supabase = createClient();

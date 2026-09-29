@@ -2,9 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { enviarNotificacionEstado, enviarEmail } from "@/lib/email";
+import { enviarNotificacionEstado, enviarEmail, plantillaEmail, nombreRemitente, casoNum, esc } from "@/lib/email";
 import { MSG_ESTADO } from "@/lib/estados";
-import { NEGOCIO } from "@/lib/config";
 
 export async function actualizarDetalleTecnico(equipoId, formData) {
   try {
@@ -36,7 +35,7 @@ export async function marcarEntregadoAdmin(equipoId) {
     const supabase = createClient();
     const { data: equipo, error: fetchErr } = await supabase
       .from("equipos")
-      .select("*, cliente:profiles!equipos_cliente_id_fkey(nombre, email)")
+      .select("*, cliente:profiles!equipos_cliente_id_fkey(nombre, email), taller:talleres(*)")
       .eq("id", equipoId)
       .single();
     if (fetchErr || !equipo) return { error: "Equipo no encontrado." };
@@ -62,14 +61,9 @@ export async function marcarEntregadoAdmin(equipoId) {
     if (equipo.cliente?.email) {
       await enviarEmail({
         to: equipo.cliente.email,
-        subject: `${NEGOCIO.nombreCorto} — ${finalizarAhora ? "Entrega confirmada" : "¿Recibiste tu equipo?"} (Caso #${String(equipo.numero).padStart(5, "0")})`,
-        html: `
-          <div style="font-family: sans-serif; max-width: 480px; margin: auto;">
-            <p style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#999;">${NEGOCIO.nombre}</p>
-            <h2 style="color:#E8873A;">Caso #${String(equipo.numero).padStart(5, "0")}</h2>
-            <p style="font-size:15px; color:#222;">${texto}</p>
-          </div>
-        `,
+        taller: equipo.taller,
+        subject: `${nombreRemitente(equipo.taller)} — ${finalizarAhora ? "Entrega confirmada" : "¿Recibiste tu equipo?"} (Caso #${casoNum(equipo.numero)})`,
+        html: plantillaEmail(equipo.taller, `Caso #${casoNum(equipo.numero)}`, `<p style="font-size:15px; color:#222;">${esc(texto)}</p>`),
       });
     }
 
@@ -188,7 +182,7 @@ export async function cambiarEstado(equipoId, nuevoEstado) {
 
   const { data: equipo, error: fetchErr } = await supabase
     .from("equipos")
-    .select("*, cliente:profiles!equipos_cliente_id_fkey(nombre, email)")
+    .select("*, cliente:profiles!equipos_cliente_id_fkey(nombre, email), taller:talleres(*)")
     .eq("id", equipoId)
     .single();
   if (fetchErr) throw fetchErr;
@@ -211,6 +205,7 @@ export async function cambiarEstado(equipoId, nuevoEstado) {
       nombre: equipo.cliente.nombre,
       numero: equipo.numero,
       estado: nuevoEstado,
+      taller: equipo.taller,
     });
   }
 
@@ -269,7 +264,7 @@ export async function enviarPresupuesto(equipoId, formData) {
 
     const { data: equipo, error: fetchErr } = await supabase
       .from("equipos")
-      .select("*, cliente:profiles!equipos_cliente_id_fkey(nombre, email)")
+      .select("*, cliente:profiles!equipos_cliente_id_fkey(nombre, email), taller:talleres(*)")
       .eq("id", equipoId)
       .single();
     if (fetchErr) return { error: fetchErr.message };
@@ -302,17 +297,16 @@ export async function enviarPresupuesto(equipoId, formData) {
     if (equipo.cliente?.email) {
       await enviarEmail({
         to: equipo.cliente.email,
-        subject: `${NEGOCIO.nombreCorto} — Presupuesto listo (Caso #${String(equipo.numero).padStart(5, "0")})`,
-        html: `
-          <div style="font-family: sans-serif; max-width: 480px; margin: auto;">
-            <p style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#999;">${NEGOCIO.nombre}</p>
-            <h2 style="color:#E8873A; margin-top:0;">Presupuesto — Caso #${String(equipo.numero).padStart(5, "0")}</h2>
-            <p style="font-size:15px; color:#222;">${texto}</p>
-            ${detalle ? `<p style="font-size:13px; color:#444; background:#f5f5f5; padding:10px; border-radius:6px;">${detalle}</p>` : ""}
-            <p style="font-size:20px; font-weight:bold; color:#222;">Total: $${total.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</p>
-            <p style="font-size:12px; color:#888;">Iniciá sesión en el sistema para aceptarlo o rechazarlo.</p>
-          </div>
-        `,
+        taller: equipo.taller,
+        subject: `${nombreRemitente(equipo.taller)} — Presupuesto listo (Caso #${casoNum(equipo.numero)})`,
+        html: plantillaEmail(
+          equipo.taller,
+          `Presupuesto — Caso #${casoNum(equipo.numero)}`,
+          `<p style="font-size:15px; color:#222;">${esc(texto)}</p>
+           ${detalle ? `<p style="font-size:13px; color:#444; background:#f5f5f5; padding:10px; border-radius:6px; white-space:pre-line;">${esc(detalle)}</p>` : ""}
+           <p style="font-size:20px; font-weight:bold; color:#222;">Total: $${total.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</p>
+           <p style="font-size:12px; color:#888;">Iniciá sesión en el sistema para aceptarlo o rechazarlo.</p>`
+        ),
       });
     }
 

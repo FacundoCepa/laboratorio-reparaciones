@@ -30,6 +30,7 @@ export async function middleware(request) {
   const isAuthRoute =
     request.nextUrl.pathname.startsWith("/login") ||
     request.nextUrl.pathname.startsWith("/signup") ||
+    request.nextUrl.pathname.startsWith("/t/") ||
     request.nextUrl.pathname.startsWith("/forgot-password");
   const isPublicLabel =
     request.nextUrl.pathname.startsWith("/etiqueta") ||

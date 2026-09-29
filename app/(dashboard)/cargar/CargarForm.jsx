@@ -3,7 +3,6 @@
 import { useState, useRef } from "react";
 import { registrarEquipo } from "./actions";
 import { TIPOS_EQUIPO } from "@/lib/estados";
-import { NEGOCIO } from "@/lib/config";
 
 function comprimirImagen(file, maxWidth = 1400, quality = 0.75) {
   return new Promise((resolve, reject) => {
@@ -28,7 +27,7 @@ function comprimirImagen(file, maxWidth = 1400, quality = 0.75) {
   });
 }
 
-export default function CargarForm({ isStaff, clientes }) {
+export default function CargarForm({ isStaff, clientes, taller }) {
   const [nuevoCliente, setNuevoCliente] = useState(false);
   const [saving, setSaving] = useState(false);
   const [resultado, setResultado] = useState(null);
@@ -66,8 +65,8 @@ export default function CargarForm({ isStaff, clientes }) {
   const imprimirTicketCredenciales = () => {
     const { equipo } = resultado;
     const cred = resultado.credencialesNuevoCliente;
-    const siteUrl = window.location.origin;
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(siteUrl + "/login")}`;
+    const siteUrl = `${window.location.origin}/t/${taller.slug}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(siteUrl)}`;
     const html = `<!doctype html><html><head><meta charset="utf-8"/><title>Ticket de acceso</title>
       <style>
         @page { size: 80mm 130mm; margin: 6mm; }
@@ -83,7 +82,7 @@ export default function CargarForm({ isStaff, clientes }) {
       </style></head>
       <body>
         <div class="ticket">
-          <div class="eyebrow">${NEGOCIO.nombre}</div>
+          <div class="eyebrow">${taller.nombre}</div>
           <div class="titulo">Acceso a tu cuenta</div>
           <div class="row"><span>Caso</span><b>#${String(equipo.numero).padStart(5, "0")}</b></div>
           <div class="row"><span>Equipo</span><b>${equipo.tipo} ${equipo.marca} ${equipo.modelo}</b></div>

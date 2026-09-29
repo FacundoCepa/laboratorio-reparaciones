@@ -6,7 +6,7 @@ export default async function CargarPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+  const { data: profile } = await supabase.from("profiles").select("*, taller:talleres(nombre, slug)").eq("id", user.id).single();
   const isStaff = profile.role === "admin" || profile.role === "tecnico";
 
   let clientes = [];
@@ -19,7 +19,7 @@ export default async function CargarPage() {
     <div className="max-w-2xl mx-auto px-5 py-8">
       <div className="eyebrow">{isStaff ? "Recepción" : "Solicitud"}</div>
       <h1 className="text-xl font-bold text-ink mb-6">Registrar equipo</h1>
-      <CargarForm isStaff={isStaff} clientes={clientes} />
+      <CargarForm isStaff={isStaff} clientes={clientes} taller={profile.taller} />
     </div>
   );
 }

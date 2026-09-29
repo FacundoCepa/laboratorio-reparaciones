@@ -51,6 +51,8 @@ calma la primera vez. Se hace una sola vez.
 4. Abrí el archivo `supabase/schema.sql` de esta carpeta, copiá todo su
    contenido, pegalo ahí y tocá **Run**. Esto crea todas las tablas,
    la numeración automática de casos y los permisos de seguridad.
+   Después corré, en orden y de a uno, los archivos `migration_002` a
+   `migration_008` de la misma carpeta.
 5. Andá a **Project Settings → API** y copiá estos tres valores (los vas
    a necesitar en el paso 4):
    - `Project URL`
@@ -64,8 +66,9 @@ calma la primera vez. Se hace una sola vez.
 2. Copiá el UUID que te genera ese usuario.
 3. Volvé a **SQL Editor** y corré (reemplazando los datos):
    ```sql
-   insert into profiles (id, role, nombre, email)
-   values ('PEGAR-UUID-ACA', 'admin', 'Tu Nombre', 'tu@email.com');
+   insert into profiles (id, role, nombre, email, taller_id)
+   values ('PEGAR-UUID-ACA', 'admin', 'Tu Nombre', 'tu@email.com',
+           (select id from talleres where slug = 'fcepa'));
    ```
 4. Con ese email y contraseña vas a poder entrar al sistema como
    administrador. Para crear técnicos, repetís lo mismo con `role = 'tecnico'`.
@@ -125,6 +128,20 @@ calma la primera vez. Se hace una sola vez.
    vista de seguimiento
 
 ---
+
+## Varios talleres (venta del sistema)
+
+- Cada taller tiene su link: `tu-sitio.com/t/<link-del-taller>` (login con su
+  marca) y `tu-sitio.com/t/<link-del-taller>/registro` (alta de clientes).
+- El superadministrador (migración 008) ve la pestaña **★ Admin**: ahí da de
+  alta talleres (crea el taller + su usuario admin), los activa/suspende y
+  les pone fecha de vencimiento. Un taller suspendido o vencido queda
+  bloqueado (sus datos no se borran).
+- El admin de cada taller carga logo, banner, contacto, datos fiscales y
+  texto de garantía desde **Mi taller**.
+- Los mails salen desde la cuenta de Gmail configurada, con el nombre del
+  taller como remitente; las respuestas le llegan al email del taller.
+- Un mismo email no puede ser cliente de dos talleres distintos.
 
 ## Qué quedó pendiente / próximos pasos posibles
 

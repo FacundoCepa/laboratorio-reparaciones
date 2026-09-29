@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { NEGOCIO } from "@/lib/config";
+import { SISTEMA } from "@/lib/config";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -30,7 +30,7 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen w-full flex items-center justify-center p-6">
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center gap-3 mb-8">
-          <img src="/logo-argentina-express.webp" alt={NEGOCIO.nombre} className="h-16 object-contain" />
+          <div className="text-xl font-black text-ink text-center">{SISTEMA.nombre}</div>
         </div>
         <div className="card p-6">
           <div className="eyebrow">Acceso</div>

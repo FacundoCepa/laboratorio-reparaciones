@@ -1,8 +1,7 @@
 "use server";
 
 import { createClient, createAdminClient } from "@/lib/supabase/server";
-import { enviarEmail } from "@/lib/email";
-import { NEGOCIO } from "@/lib/config";
+import { avisarStaffDelTaller, plantillaEmail, nombreRemitente, casoNum, esc } from "@/lib/email";
 import { revalidatePath } from "next/cache";
 
 export async function responderPresupuesto(equipoId, respuesta) {
@@ -38,25 +37,19 @@ export async function responderPresupuesto(equipoId, respuesta) {
       .eq("id", equipoId);
     if (error) return { error: error.message };
 
-    // Avisar al staff (todos los admin/técnico) por email.
-    const { data: staff } = await admin.from("profiles").select("email, nombre").in("role", ["admin", "tecnico"]);
+    // Avisar por email al staff (admin/técnicos) de ESTE taller.
+    const { data: taller } = await admin.from("talleres").select("*").eq("id", equipo.taller_id).single();
     const total = Number(equipo.presupuesto_mano_obra || 0) + Number(equipo.presupuesto_repuestos || 0);
-    const asunto = `${NEGOCIO.nombreCorto} — Presupuesto ${respuesta} (Caso #${String(equipo.numero).padStart(5, "0")})`;
-    const html = `
-      <div style="font-family: sans-serif; max-width: 480px; margin: auto;">
-        <h2 style="color:${respuesta === "aceptado" ? "#7FBF7F" : "#E86A5C"};">
-          Presupuesto ${respuesta === "aceptado" ? "ACEPTADO ✓" : "RECHAZADO ✕"}
-        </h2>
-        <p style="font-size:15px; color:#222;">
-          Caso #${String(equipo.numero).padStart(5, "0")} — ${equipo.tipo} ${equipo.marca} ${equipo.modelo}
-        </p>
-        <p style="font-size:14px; color:#444;">Monto presupuestado: $${total.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</p>
-        ${respuesta === "aceptado" ? '<p style="font-size:13px; color:#888;">Entrá al caso en el sistema para pasarlo a "En proceso de reparación" cuando quieras.</p>' : ""}
-      </div>
-    `;
-    for (const s of staff || []) {
-      if (s.email) await enviarEmail({ to: s.email, subject: asunto, html });
-    }
+    const asunto = `${nombreRemitente(taller)} — Presupuesto ${respuesta} (Caso #${casoNum(equipo.numero)})`;
+    const html = plantillaEmail(
+      taller,
+      `Presupuesto ${respuesta === "aceptado" ? "ACEPTADO ✓" : "RECHAZADO ✕"}`,
+      `<p style="font-size:15px; color:#222;">Caso #${casoNum(equipo.numero)} — ${esc(equipo.tipo)} ${esc(equipo.marca)} ${esc(equipo.modelo)}</p>
+       <p style="font-size:14px; color:#444;">Monto presupuestado: $${total.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</p>
+       ${respuesta === "aceptado" ? '<p style="font-size:13px; color:#888;">Entrá al caso en el sistema para pasarlo a "En proceso de reparación" cuando quieras.</p>' : ""}`,
+      respuesta === "aceptado" ? "#7FBF7F" : "#E86A5C"
+    );
+    if (taller) await avisarStaffDelTaller(admin, taller, asunto, html);
 
     revalidatePath(`/mis-equipos/${equipoId}`);
     revalidatePath(`/equipo/${equipoId}`);
@@ -97,23 +90,17 @@ export async function marcarRecibidoCliente(equipoId) {
       await admin.from("historial_estados").insert({ equipo_id: equipoId, estado: "entregado" });
     }
 
-    const { data: staff } = await admin.from("profiles").select("email").in("role", ["admin", "tecnico"]);
-    const asunto = `${NEGOCIO.nombreCorto} — ${finalizarAhora ? "Entrega confirmada" : "¿Entregaste este equipo?"} (Caso #${String(equipo.numero).padStart(5, "0")})`;
-    const html = `
-      <div style="font-family: sans-serif; max-width: 480px; margin: auto;">
-        <h2 style="color:${finalizarAhora ? "#7FBF7F" : "#E8873A"};">
-          ${finalizarAhora ? "Entrega confirmada ✓" : "¿Entregaste este equipo?"}
-        </h2>
-        <p style="font-size:15px; color:#222;">
-          Caso #${String(equipo.numero).padStart(5, "0")} — el cliente dice que ${
-      finalizarAhora ? "ya está todo confirmado." : "ya recibió el equipo. Confirmalo desde el sistema."
-    }
-        </p>
-      </div>
-    `;
-    for (const s of staff || []) {
-      if (s.email) await enviarEmail({ to: s.email, subject: asunto, html });
-    }
+    const { data: taller } = await admin.from("talleres").select("*").eq("id", equipo.taller_id).single();
+    const asunto = `${nombreRemitente(taller)} — ${finalizarAhora ? "Entrega confirmada" : "¿Entregaste este equipo?"} (Caso #${casoNum(equipo.numero)})`;
+    const html = plantillaEmail(
+      taller,
+      finalizarAhora ? "Entrega confirmada ✓" : "¿Entregaste este equipo?",
+      `<p style="font-size:15px; color:#222;">Caso #${casoNum(equipo.numero)} — el cliente dice que ${
+        finalizarAhora ? "ya está todo confirmado." : "ya recibió el equipo. Confirmalo desde el sistema."
+      }</p>`,
+      finalizarAhora ? "#7FBF7F" : "#E8873A"
+    );
+    if (taller) await avisarStaffDelTaller(admin, taller, asunto, html);
 
     revalidatePath(`/mis-equipos/${equipoId}`);
     revalidatePath(`/equipo/${equipoId}`);

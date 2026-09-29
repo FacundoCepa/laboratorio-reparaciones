@@ -1,30 +1,31 @@
 "use server";
 
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { enviarEmail, plantillaEmail, nombreRemitente, esc } from "@/lib/email";
+import { requireStaff } from "@/lib/taller";
 
 function randomPassword() {
   return Math.random().toString(36).slice(2, 10);
 }
 
-async function checkIsStaff() {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
-  if (!profile || (profile.role !== "admin" && profile.role !== "tecnico")) return null;
-  return profile;
+// Verifica que quien opera sea staff de un taller habilitado y que el
+// usuario a modificar pertenezca a ESE MISMO taller.
+async function checkStaffYMismoTaller(userId) {
+  const ctx = await requireStaff();
+  if (ctx.error) return ctx;
+  const admin = createAdminClient();
+  const { data: objetivo } = await admin.from("profiles").select("id, nombre, email, taller_id").eq("id", userId).single();
+  if (!objetivo || objetivo.taller_id !== ctx.profile.taller_id) return { error: "No autorizado." };
+  return { ...ctx, admin, objetivo };
 }
 
 export async function resetearPassword(userId, nuevaPasswordManual) {
-  const staff = await checkIsStaff();
-  if (!staff) return { error: "No autorizado." };
+  const chk = await checkStaffYMismoTaller(userId);
+  if (chk.error) return { error: chk.error };
+  const { admin } = chk;
 
   const nuevaPassword = nuevaPasswordManual?.trim() || randomPassword();
-
-  const admin = createAdminClient();
   const { error } = await admin.auth.admin.updateUserById(userId, { password: nuevaPassword });
   if (error) return { error: error.message };
 
@@ -32,10 +33,10 @@ export async function resetearPassword(userId, nuevaPasswordManual) {
 }
 
 export async function actualizarPerfil(userId, formData) {
-  const staff = await checkIsStaff();
-  if (!staff) return { error: "No autorizado." };
+  const chk = await checkStaffYMismoTaller(userId);
+  if (chk.error) return { error: chk.error };
+  const { admin } = chk;
 
-  const admin = createAdminClient();
   const nuevoEmail = formData.get("email")?.toString().trim();
   const nombre = formData.get("nombre")?.toString().trim();
   const telefono = formData.get("telefono")?.toString().trim() || null;
@@ -63,4 +64,28 @@ export async function actualizarPerfil(userId, formData) {
 
   revalidatePath("/usuarios");
   return { ok: true };
+}
+
+export async function enviarMailPrueba(userId) {
+  const chk = await checkStaffYMismoTaller(userId);
+  if (chk.error) return { error: chk.error };
+  const { objetivo: perfil, taller } = chk;
+  if (!perfil.email) return { error: "Este usuario no tiene email cargado." };
+
+  const resultado = await enviarEmail({
+    to: perfil.email,
+    taller,
+    subject: `${nombreRemitente(taller)} — Mail de prueba`,
+    html: plantillaEmail(
+      taller,
+      "Mail de prueba",
+      `<p style="font-size:15px; color:#222;">Este es un mail de prueba enviado a <b>${esc(perfil.email)}</b> para confirmar que la dirección cargada para <b>${esc(perfil.nombre)}</b> es correcta.</p>`
+    ),
+  });
+
+  if (resultado.error) return { error: resultado.error };
+  if (resultado.simulated) {
+    return { error: "El envío de mails no está configurado en este entorno (modo simulado), no se mandó nada de verdad." };
+  }
+  return { ok: true, emailUsado: perfil.email };
 }

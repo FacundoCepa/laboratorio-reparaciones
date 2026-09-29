@@ -3,30 +3,27 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { SISTEMA } from "@/lib/config";
+import LogoTaller from "@/components/LogoTaller";
 
-export default function ResetPasswordPage() {
+export default function LoginForm({ taller }) {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [password2, setPassword2] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const submit = async (e) => {
     e.preventDefault();
-    setError("");
-    if (password.length < 6) return setError("La contraseña tiene que tener al menos 6 caracteres.");
-    if (password !== password2) return setError("Las contraseñas no coinciden.");
-
     setLoading(true);
+    setError("");
     const supabase = createClient();
-    const { error } = await supabase.auth.updateUser({ password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
     setLoading(false);
-
     if (error) {
-      setError(
-        "No pudimos actualizar la contraseña. El link puede haber vencido — pedí uno nuevo desde 'Olvidé mi contraseña'."
-      );
+      setError("Email o contraseña incorrectos.");
       return;
     }
     router.push("/panel");
@@ -37,44 +34,52 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen w-full flex items-center justify-center p-6">
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center gap-3 mb-8">
-          <div className="text-xl font-black text-ink text-center">{SISTEMA.nombre}</div>
+          <LogoTaller taller={taller} />
+          <div className="text-[11px] text-dim uppercase tracking-wide">Gestión de reparaciones</div>
         </div>
         <div className="card p-6">
           <div className="eyebrow">Acceso</div>
-          <h1 className="text-lg font-bold text-ink mb-5">Elegí tu nueva contraseña</h1>
+          <h1 className="text-lg font-bold text-ink mb-5">Iniciar sesión</h1>
           <form onSubmit={submit}>
             <label className="block mb-4">
-              <span className="block text-xs font-semibold uppercase tracking-wide text-muted mb-1.5">
-                Nueva contraseña
-              </span>
+              <span className="block text-xs font-semibold uppercase tracking-wide text-muted mb-1.5">Email</span>
               <input
-                type="password"
+                type="email"
                 required
-                minLength={6}
                 className="input"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 autoFocus
               />
             </label>
             <label className="block mb-4">
               <span className="block text-xs font-semibold uppercase tracking-wide text-muted mb-1.5">
-                Repetila
+                Contraseña
               </span>
               <input
                 type="password"
                 required
-                minLength={6}
                 className="input"
-                value={password2}
-                onChange={(e) => setPassword2(e.target.value)}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
             </label>
             {error && <div className="text-bad text-xs mb-4">{error}</div>}
             <button type="submit" disabled={loading} className="btn w-full">
-              {loading ? "Guardando..." : "Guardar nueva contraseña"}
+              {loading ? "Ingresando..." : "Ingresar"}
             </button>
           </form>
+          <p className="text-xs text-dim text-center mt-3">
+            <a href="/forgot-password" className="text-accent hover:underline">
+              ¿Olvidaste tu contraseña?
+            </a>
+          </p>
+        </div>
+        <div className="mt-4 text-center text-xs text-dim">
+          ¿Sos cliente y todavía no tenés cuenta?{" "}
+          <a href={`/t/${taller.slug}/registro`} className="text-accent font-semibold hover:underline">
+            Creá tu cuenta
+          </a>
         </div>
       </div>
     </div>

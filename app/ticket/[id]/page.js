@@ -1,12 +1,12 @@
 import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/server";
-import { NEGOCIO } from "@/lib/config";
+
 
 export default async function TicketPage({ params }) {
   const supabase = createAdminClient();
   const { data: equipo } = await supabase
     .from("equipos")
-    .select("*, cliente:profiles!equipos_cliente_id_fkey(nombre, email)")
+    .select("*, cliente:profiles!equipos_cliente_id_fkey(nombre, email), taller:talleres(*)")
     .eq("id", params.id)
     .single();
 
@@ -14,13 +14,18 @@ export default async function TicketPage({ params }) {
 
   const host = headers().get("host");
   const proto = host?.includes("localhost") ? "http" : "https";
-  const siteUrl = `${proto}://${host}`;
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(siteUrl + "/login")}`;
+  const t = equipo.taller || {};
+  const siteUrl = `${proto}://${host}/t/${t.slug}`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(siteUrl)}`;
+  const contacto = [t.direccion, t.telefono && `Tel ${t.telefono}`, t.whatsapp && `WhatsApp ${t.whatsapp}`, t.horarios]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <div className="min-h-screen print:min-h-0 bg-white text-black flex items-center justify-center p-4 print:p-0">
       <div id="etiqueta" className="w-full max-w-[340px] border-2 border-dashed border-black p-5 font-mono text-black">
-        <div className="text-[10px] tracking-widest uppercase text-gray-500 text-center">{NEGOCIO.nombre}</div>
+        <div className="text-[10px] tracking-widest uppercase text-gray-500 text-center">{t.nombre}</div>
+        {contacto && <div className="text-[9px] text-gray-500 text-center mt-0.5">{contacto}</div>}
         <div className="text-sm font-bold uppercase text-center mt-1 mb-3 pb-2 border-b border-black">
           Comprobante de registro
         </div>
@@ -53,6 +58,12 @@ export default async function TicketPage({ params }) {
           <img src={qrUrl} alt="Código QR de acceso" width={120} height={120} />
         </div>
         <div className="text-[9px] text-gray-500 text-center break-all">{siteUrl}</div>
+
+        {t.texto_garantia && (
+          <div className="text-[9px] text-gray-600 mt-3 pt-2 border-t border-gray-300 whitespace-pre-wrap text-left">
+            {t.texto_garantia}
+          </div>
+        )}
 
         <div className="text-[9px] text-gray-400 text-center mt-4 pt-2 border-t border-gray-300">
           ⚠️ No es la etiqueta del equipo — recordá imprimir y pegar también el cupón del equipo.

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { resetearPassword, actualizarPerfil } from "./actions";
+import { resetearPassword, actualizarPerfil, enviarMailPrueba } from "./actions";
 
 export default function UsuariosTable({ usuarios }) {
   const [q, setQ] = useState("");
@@ -36,6 +36,17 @@ export default function UsuariosTable({ usuarios }) {
     const res = await actualizarPerfil(id, formData);
     setBusy(null);
     setMsg((m) => ({ ...m, [id]: res.error ? `Error: ${res.error}` : "Datos actualizados." }));
+  };
+
+  const probarMail = async (id) => {
+    setBusy(id);
+    setMsg((m) => ({ ...m, [id]: "" }));
+    const res = await enviarMailPrueba(id);
+    setBusy(null);
+    setMsg((m) => ({
+      ...m,
+      [id]: res.error ? `Error: ${res.error}` : `Mail de prueba enviado a ${res.emailUsado}. Confirmá con el cliente si le llegó.`,
+    }));
   };
 
   return (
@@ -84,6 +95,15 @@ export default function UsuariosTable({ usuarios }) {
                     Guardar datos
                   </button>
                 </form>
+
+                <button
+                  type="button"
+                  disabled={busy === u.id}
+                  onClick={() => probarMail(u.id)}
+                  className="btn-ghost text-xs w-full"
+                >
+                  ✉️ Mandar mail de prueba a esta dirección
+                </button>
 
                 <div>
                   <span className="block text-[11px] uppercase tracking-wide text-muted mb-2">

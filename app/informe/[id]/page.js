@@ -1,17 +1,21 @@
 import { createAdminClient } from "@/lib/supabase/server";
-import { NEGOCIO } from "@/lib/config";
 import { estadoInfo } from "@/lib/estados";
 
 export default async function InformePage({ params }) {
   const supabase = createAdminClient();
   const { data: equipo } = await supabase
     .from("equipos")
-    .select("*, cliente:profiles!equipos_cliente_id_fkey(nombre, email, telefono)")
+    .select("*, cliente:profiles!equipos_cliente_id_fkey(nombre, email, telefono), taller:talleres(*)")
     .eq("id", params.id)
     .single();
 
   if (!equipo) return <div className="p-8 text-center text-dim">Informe no encontrado.</div>;
 
+  const t = equipo.taller || {};
+  const fiscal = [t.razon_social, t.cuit && `CUIT ${t.cuit}`, t.condicion_iva].filter(Boolean).join(" · ");
+  const contacto = [t.direccion, t.telefono && `Tel ${t.telefono}`, t.whatsapp && `WhatsApp ${t.whatsapp}`, t.email]
+    .filter(Boolean)
+    .join(" · ");
   const total = Number(equipo.costo_mano_obra || 0) + Number(equipo.costo_repuestos || 0);
   const fmt = (n) => Number(n || 0).toLocaleString("es-AR", { minimumFractionDigits: 2 });
   const fechaIngreso = equipo.creado_at ? new Date(equipo.creado_at).toLocaleDateString("es-AR") : "—";
@@ -23,9 +27,14 @@ export default async function InformePage({ params }) {
     <div className="min-h-screen print:min-h-0 bg-white text-black flex items-center justify-center p-4 print:p-0">
       <div id="etiqueta" className="w-full max-w-[560px] p-5 sm:p-8 font-sans text-[13px] leading-relaxed">
         <div className="flex items-center justify-between border-b-2 border-black pb-4 mb-5">
-          <div>
-            <div className="text-lg font-black">{NEGOCIO.nombre}</div>
-            <div className="text-[11px] text-gray-500 uppercase tracking-wide">Informe de reparación</div>
+          <div className="flex items-center gap-3 min-w-0">
+            {t.logo_url && <img src={t.logo_url} alt="" className="h-12 max-w-[120px] object-contain" />}
+            <div className="min-w-0">
+              <div className="text-lg font-black leading-tight">{t.nombre}</div>
+              {fiscal && <div className="text-[10px] text-gray-600">{fiscal}</div>}
+              {contacto && <div className="text-[10px] text-gray-600">{contacto}</div>}
+              <div className="text-[11px] text-gray-500 uppercase tracking-wide mt-0.5">Informe de reparación</div>
+            </div>
           </div>
           <div className="text-right">
             <div className="text-[10px] uppercase text-gray-500">Caso</div>
@@ -80,6 +89,7 @@ export default async function InformePage({ params }) {
         <div className="text-[12px] mb-4">
           <b>Garantía:</b> {equipo.garantia_dias ?? 90} días sobre el trabajo realizado, a partir de la fecha de entrega.
         </div>
+        {t.texto_garantia && <div className="text-[11px] text-gray-600 mb-4 whitespace-pre-wrap">{t.texto_garantia}</div>}
 
         <Seccion titulo="Observaciones" texto={equipo.observaciones} />
 

@@ -1,5 +1,4 @@
 import { createAdminClient } from "@/lib/supabase/server";
-import { NEGOCIO } from "@/lib/config";
 
 // Nota: esta página es de solo lectura y se accede por un link directo con
 // el UUID del caso (no listado, no indexado). Usa el cliente admin porque
@@ -10,7 +9,7 @@ export default async function EtiquetaPage({ params }) {
   const supabase = createAdminClient();
   const { data: equipo } = await supabase
     .from("equipos")
-    .select("*, cliente:profiles!equipos_cliente_id_fkey(nombre)")
+    .select("*, cliente:profiles!equipos_cliente_id_fkey(nombre), taller:talleres(nombre, nombre_corto)")
     .eq("id", params.id)
     .single();
 
@@ -27,7 +26,7 @@ export default async function EtiquetaPage({ params }) {
     <div className="min-h-screen print:min-h-0 bg-white flex items-center justify-center p-4 print:p-0">
       <div id="etiqueta" className="w-full max-w-[320px] border-2 border-dashed border-black p-4 font-mono text-black">
         <div className="text-[10px] tracking-widest uppercase text-gray-500">
-          {NEGOCIO.nombre} · Etiqueta
+          {equipo.taller?.nombre_corto || equipo.taller?.nombre} · Etiqueta
         </div>
         <div className="text-sm font-bold uppercase mt-1 mb-2 pb-1.5 border-b border-black">
           {equipo.tipo} · {equipo.marca} {equipo.modelo}

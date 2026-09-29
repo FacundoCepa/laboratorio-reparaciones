@@ -2,9 +2,9 @@
 
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { enviarEmail } from "@/lib/email";
+import { enviarEmail, plantillaEmail, nombreRemitente, casoNum, esc } from "@/lib/email";
 import { MSG_ESTADO } from "@/lib/estados";
-import { NEGOCIO } from "@/lib/config";
+import { tallerHabilitado } from "@/lib/taller";
 
 function randomSerial() {
   return (
@@ -26,7 +26,10 @@ export async function registrarEquipo(formData) {
     } = await supabase.auth.getUser();
     if (!user) return { error: "No autenticado. Volvé a iniciar sesión." };
 
-    const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+    const { data: profile } = await supabase.from("profiles").select("*, taller:talleres(*)").eq("id", user.id).single();
+    if (!profile) return { error: "Tu usuario no tiene perfil." };
+    if (!tallerHabilitado(profile.taller)) return { error: "El servicio de este taller está suspendido." };
+    const taller = profile.taller;
     const isStaff = profile.role === "admin" || profile.role === "tecnico";
 
     let clienteId = user.id;
@@ -59,11 +62,15 @@ export async function registrarEquipo(formData) {
         const { error: profileErr } = await admin.from("profiles").insert({
           id: created.user.id,
           role: "cliente",
+          taller_id: profile.taller_id,
           nombre: nombreNuevo,
           email: emailNuevo,
           telefono: telefonoNuevo || null,
         });
-        if (profileErr) return { error: `Cliente creado pero falló su perfil: ${profileErr.message}` };
+        if (profileErr) {
+          await admin.auth.admin.deleteUser(created.user.id);
+          return { error: `No se pudo crear el perfil del cliente: ${profileErr.message}` };
+        }
 
         clienteId = created.user.id;
         credencialesNuevoCliente = { email: emailNuevo, password: tempPassword };
@@ -135,14 +142,9 @@ export async function registrarEquipo(formData) {
         await supabase.from("notificaciones").insert({ equipo_id: equipo.id, texto, canal: "email" });
         await enviarEmail({
           to: clientePerfil.email,
-          subject: `${NEGOCIO.nombreCorto} — Equipo recibido (Caso #${String(equipo.numero).padStart(5, "0")})`,
-          html: `
-            <div style="font-family: sans-serif; max-width: 480px; margin: auto;">
-              <p style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#999;">${NEGOCIO.nombre}</p>
-              <h2 style="color:#E8873A;">Caso #${String(equipo.numero).padStart(5, "0")}</h2>
-              <p style="font-size:15px; color:#222;">${texto}</p>
-            </div>
-          `,
+          taller,
+          subject: `${nombreRemitente(taller)} — Equipo recibido (Caso #${casoNum(equipo.numero)})`,
+          html: plantillaEmail(taller, `Caso #${casoNum(equipo.numero)}`, `<p style="font-size:15px; color:#222;">${esc(texto)}</p>`),
         });
       }
     }

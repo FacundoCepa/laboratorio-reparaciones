@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { NEGOCIO } from "@/lib/config";
 import InstalarAppModal from "./InstalarAppModal";
+import LogoTaller from "./LogoTaller";
 
-export default function Header({ nombre, role }) {
+export default function Header({ nombre, role, superadmin, taller }) {
   const pathname = usePathname();
   const router = useRouter();
   const isStaff = role === "admin" || role === "tecnico";
@@ -19,6 +19,8 @@ export default function Header({ nombre, role }) {
     { href: "/entregados", label: "Entregados" },
     { href: "/historial", label: "Historial" },
     { href: "/usuarios", label: "Usuarios" },
+    ...(role === "admin" ? [{ href: "/mi-taller", label: "Mi taller" }] : []),
+    ...(superadmin ? [{ href: "/admin", label: "★ Admin" }] : []),
   ];
   const clientTabs = [
     { href: "/mis-equipos", label: "Mis equipos" },
@@ -29,14 +31,16 @@ export default function Header({ nombre, role }) {
   const logout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/login");
+    router.push(`/login?t=${taller?.slug || ""}`);
     router.refresh();
   };
 
   return (
     <div className="border-b border-border bg-[#211F1C] sticky top-0 z-10">
       <div className="max-w-5xl mx-auto px-4 sm:px-5 py-3 flex items-center justify-between gap-3">
-        <img src="/logo-argentina-express.webp" alt={NEGOCIO.nombreCorto} className="h-6 sm:h-7 object-contain shrink-0" />
+        <div className="min-w-0">
+          <LogoTaller taller={taller} className="h-6 sm:h-7" textClassName="text-sm sm:text-base truncate" />
+        </div>
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <div className="text-right hidden sm:block">
             <div className="text-xs font-semibold text-ink">{nombre}</div>
