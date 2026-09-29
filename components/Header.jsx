@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { NEGOCIO } from "@/lib/config";
+import InstalarAppModal from "./InstalarAppModal";
 
 export default function Header({ nombre, role }) {
   const pathname = usePathname();
@@ -13,7 +14,7 @@ export default function Header({ nombre, role }) {
   const staffTabs = [
     { href: "/panel", label: "Panel" },
     { href: "/cargar", label: "Cargar equipo" },
-    { href: "/equipos", label: "Equipos" },
+    { href: "/equipos", label: "Laboratorio" },
     { href: "/finalizados", label: "Finalizados" },
     { href: "/entregados", label: "Entregados" },
     { href: "/historial", label: "Historial" },
@@ -41,6 +42,7 @@ export default function Header({ nombre, role }) {
             <div className="text-xs font-semibold text-ink">{nombre}</div>
             <div className="text-[10px] text-dim uppercase">{role}</div>
           </div>
+          <InstalarAppModal />
           <button
             onClick={logout}
             className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-muted hover:text-bad hover:border-[#5c3a35] shrink-0"
