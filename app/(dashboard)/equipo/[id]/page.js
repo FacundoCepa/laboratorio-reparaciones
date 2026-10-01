@@ -5,6 +5,8 @@ import Seccion from "@/components/Seccion";
 import { ESTADOS, estadoInfo, estadoIndex } from "@/lib/estados";
 import EstadoActions from "./EstadoActions";
 import InformeForm from "./InformeForm";
+import PasarVentaBoton from "./PasarVentaBoton";
+import { TALLERES_CON_ERP } from "@/lib/config";
 import PresupuestoForm from "./PresupuestoForm";
 import FotosForm from "./FotosForm";
 import DetalleTecnicoForm from "./DetalleTecnicoForm";
@@ -17,7 +19,7 @@ export default async function EquipoDetallePage({ params }) {
   const supabase = createClient();
   const { data: equipo } = await supabase
     .from("equipos")
-    .select("*, cliente:profiles!equipos_cliente_id_fkey(nombre, email, telefono)")
+    .select("*, cliente:profiles!equipos_cliente_id_fkey(nombre, email, telefono), taller:talleres(slug)")
     .eq("id", params.id)
     .single();
 
@@ -98,6 +100,7 @@ export default async function EquipoDetallePage({ params }) {
               Completalo cuando el equipo esté reparado o finalizado. Se puede editar e imprimir las veces que haga falta.
             </p>
             <InformeForm equipo={equipo} />
+            {TALLERES_CON_ERP.includes(equipo.taller?.slug) && <PasarVentaBoton equipo={equipo} />}
           </Seccion>
 
           <Seccion title="Zona de riesgo">

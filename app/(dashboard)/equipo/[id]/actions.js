@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { enviarNotificacionEstado, enviarEmail, plantillaEmail, nombreRemitente, casoNum, esc } from "@/lib/email";
 import { MSG_ESTADO } from "@/lib/estados";
+import { TALLERES_CON_ERP } from "@/lib/config";
 
 export async function actualizarDetalleTecnico(equipoId, formData) {
   try {
@@ -246,6 +247,76 @@ export async function guardarInforme(equipoId, formData) {
     return { ok: true };
   } catch (err) {
     return { error: err.message || "Ocurrió un error al guardar el informe." };
+  }
+}
+
+/**
+ * "Pasar venta al sistema": manda el informe ya cargado (cliente, número
+ * de caso, mano de obra y repuesto) a Argentina Express, que lo carga como
+ * una venta de "reparación" (ver venta-form.tsx en ese repo) a cuenta
+ * corriente del cliente. Queda enlazado acá para no volver a cargarlo dos
+ * veces si se aprieta el botón por error.
+ * Solo disponible para los talleres listados en TALLERES_CON_ERP.
+ */
+export async function pasarVentaAlSistema(equipoId) {
+  try {
+    const supabase = createClient();
+
+    const { data: equipo, error: fetchErr } = await supabase
+      .from("equipos")
+      .select("*, cliente:profiles!equipos_cliente_id_fkey(nombre, email, telefono), taller:talleres(slug)")
+      .eq("id", equipoId)
+      .single();
+    if (fetchErr || !equipo) return { error: "Equipo no encontrado." };
+
+    if (!TALLERES_CON_ERP.includes(equipo.taller?.slug)) {
+      return { error: "Esta función no está disponible para este taller." };
+    }
+
+    if (equipo.venta_erp_id) {
+      return { error: `Ya se había pasado como venta #${equipo.venta_erp_numero} en Argentina Express.` };
+    }
+
+    const manoObra = Number(equipo.costo_mano_obra || 0);
+    if (manoObra <= 0) {
+      return { error: "Cargá el costo de mano de obra en el informe antes de pasar la venta." };
+    }
+
+    if (!process.env.ARGEX_API_URL || !process.env.ARGEX_API_KEY) {
+      return { error: "Falta configurar ARGEX_API_URL / ARGEX_API_KEY en este sistema." };
+    }
+
+    const res = await fetch(`${process.env.ARGEX_API_URL}/api/reparaciones-lab`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-api-key": process.env.ARGEX_API_KEY },
+      body: JSON.stringify({
+        numeroOrden: equipo.numero,
+        clienteNombre: equipo.cliente?.nombre || "Cliente",
+        clienteEmail: equipo.cliente?.email || null,
+        clienteTelefono: equipo.cliente?.telefono || null,
+        montoManoObraArs: manoObra,
+        montoRepuestoArs: Number(equipo.costo_repuestos || 0),
+      }),
+    });
+
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      return { error: data?.error || "No se pudo pasar la venta al sistema." };
+    }
+
+    await supabase
+      .from("equipos")
+      .update({
+        venta_erp_id: data.ventaId,
+        venta_erp_numero: data.numero,
+        venta_erp_creada_at: new Date().toISOString(),
+      })
+      .eq("id", equipoId);
+
+    revalidatePath(`/equipo/${equipoId}`);
+    return { ok: true, numero: data.numero };
+  } catch (err) {
+    return { error: err.message || "Ocurrió un error al pasar la venta al sistema." };
   }
 }
 
