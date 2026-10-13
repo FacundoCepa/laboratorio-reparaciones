@@ -3,20 +3,25 @@
 import { useState, useTransition } from "react";
 import { cambiarEstado } from "./actions";
 import { ESTADOS, ESTADO_NO_REPARADO } from "@/lib/estados";
+import AvisoEmail from "@/components/AvisoEmail";
 
 export default function EstadoActions({ equipoId, estadoActual, nextEstado }) {
   const [isPending, startTransition] = useTransition();
   const [estado, setEstado] = useState(estadoActual);
+  const [avisoEmail, setAvisoEmail] = useState(null);
 
   const avanzar = (nuevo) => {
     setEstado(nuevo);
+    setAvisoEmail(null);
     startTransition(async () => {
-      await cambiarEstado(equipoId, nuevo);
+      const res = await cambiarEstado(equipoId, nuevo);
+      setAvisoEmail(res?.avisoEmail || null);
     });
   };
 
   return (
     <div className="mt-3 space-y-2">
+      <AvisoEmail mensaje={avisoEmail} />
       {estado === "registrado" && (
         <button disabled={isPending} onClick={() => avanzar("recibido")} className="btn w-full">
           📦 Marcar equipo como ingresado

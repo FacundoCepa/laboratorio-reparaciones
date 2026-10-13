@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { registrarEquipo } from "./actions";
 import { TIPOS_EQUIPO } from "@/lib/estados";
+import AvisoEmail from "@/components/AvisoEmail";
 
 function comprimirImagen(file, maxWidth = 1400, quality = 0.75) {
   return new Promise((resolve, reject) => {
@@ -109,6 +110,7 @@ export default function CargarForm({ isStaff, clientes, taller }) {
     return (
       <div className="card p-8 text-center">
         <div className="eyebrow">Equipo registrado</div>
+        <AvisoEmail mensaje={resultado.avisoEmail} />
         <h2 className="text-2xl font-black text-ink mb-1">Caso #{String(equipo.numero).padStart(5, "0")}</h2>
         <p className="text-sm text-muted mb-6">
           {equipo.tipo} · {equipo.marca} {equipo.modelo} · Serial {equipo.serial}

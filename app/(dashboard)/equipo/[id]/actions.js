@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { enviarNotificacionEstado, enviarEmail, plantillaEmail, nombreRemitente, casoNum, esc } from "@/lib/email";
+import { enviarNotificacionEstado, enviarEmail, plantillaEmail, nombreRemitente, casoNum, esc, avisoEnvio, canalEnvio } from "@/lib/email";
 import { MSG_ESTADO } from "@/lib/estados";
 import { TALLERES_CON_ERP } from "@/lib/config";
 
@@ -57,15 +57,16 @@ export async function marcarEntregadoAdmin(equipoId) {
       ? `¡Listo ${nombre}! Quedó confirmada la entrega de tu equipo (caso #${equipo.numero}).`
       : `Hola ${nombre}, marcamos tu equipo (caso #${equipo.numero}) como entregado. ¿Lo recibiste? Confirmalo desde tu cuenta.`;
 
-    await supabase.from("notificaciones").insert({ equipo_id: equipoId, texto, canal: "email" });
-
+    let avisoEmail = "El cliente no tiene email cargado: no se le avisó por mail.";
     if (equipo.cliente?.email) {
-      await enviarEmail({
+      const envio = await enviarEmail({
         to: equipo.cliente.email,
         taller: equipo.taller,
         subject: `${nombreRemitente(equipo.taller)} — ${finalizarAhora ? "Entrega confirmada" : "¿Recibiste tu equipo?"} (Caso #${casoNum(equipo.numero)})`,
         html: plantillaEmail(equipo.taller, `Caso #${casoNum(equipo.numero)}`, `<p style="font-size:15px; color:#222;">${esc(texto)}</p>`),
       });
+      await supabase.from("notificaciones").insert({ equipo_id: equipoId, texto, canal: canalEnvio(envio) });
+      avisoEmail = avisoEnvio(envio, equipo.cliente.email);
     }
 
     revalidatePath(`/equipo/${equipoId}`);
@@ -74,7 +75,7 @@ export async function marcarEntregadoAdmin(equipoId) {
     revalidatePath("/equipos");
     revalidatePath("/entregados");
 
-    return { ok: true, finalizado: finalizarAhora };
+    return { ok: true, finalizado: finalizarAhora, avisoEmail };
   } catch (err) {
     return { error: err.message || "Ocurrió un error." };
   }
@@ -198,16 +199,22 @@ export async function cambiarEstado(equipoId, nuevoEstado) {
 
   await supabase.from("historial_estados").insert({ equipo_id: equipoId, estado: nuevoEstado });
 
-  if (MSG_ESTADO[nuevoEstado] && equipo.cliente?.email) {
-    const texto = MSG_ESTADO[nuevoEstado](equipo.cliente.nombre?.split(" ")[0] || "cliente", equipo.numero);
-    await supabase.from("notificaciones").insert({ equipo_id: equipoId, texto, canal: "email" });
-    await enviarNotificacionEstado({
-      email: equipo.cliente.email,
-      nombre: equipo.cliente.nombre,
-      numero: equipo.numero,
-      estado: nuevoEstado,
-      taller: equipo.taller,
-    });
+  let avisoEmail = null;
+  if (MSG_ESTADO[nuevoEstado]) {
+    if (!equipo.cliente?.email) {
+      avisoEmail = "El cliente no tiene email cargado: no se le avisó por mail.";
+    } else {
+      const texto = MSG_ESTADO[nuevoEstado](equipo.cliente.nombre?.split(" ")[0] || "cliente", equipo.numero);
+      const envio = await enviarNotificacionEstado({
+        email: equipo.cliente.email,
+        nombre: equipo.cliente.nombre,
+        numero: equipo.numero,
+        estado: nuevoEstado,
+        taller: equipo.taller,
+      });
+      await supabase.from("notificaciones").insert({ equipo_id: equipoId, texto, canal: canalEnvio(envio) });
+      avisoEmail = avisoEnvio(envio, equipo.cliente.email);
+    }
   }
 
   revalidatePath(`/equipo/${equipoId}`);
@@ -215,6 +222,8 @@ export async function cambiarEstado(equipoId, nuevoEstado) {
   revalidatePath("/equipos");
   revalidatePath("/historial");
   revalidatePath("/mis-equipos");
+
+  return { ok: true, avisoEmail };
 }
 
 export async function guardarInforme(equipoId, formData) {
@@ -363,10 +372,9 @@ export async function enviarPresupuesto(equipoId, formData) {
       { minimumFractionDigits: 2 }
     )}. Ingresá a tu cuenta para verlo en detalle y aceptarlo o rechazarlo.`;
 
-    await supabase.from("notificaciones").insert({ equipo_id: equipoId, texto, canal: "email" });
-
+    let avisoEmail = "El cliente no tiene email cargado: no se le avisó por mail.";
     if (equipo.cliente?.email) {
-      await enviarEmail({
+      const envio = await enviarEmail({
         to: equipo.cliente.email,
         taller: equipo.taller,
         subject: `${nombreRemitente(equipo.taller)} — Presupuesto listo (Caso #${casoNum(equipo.numero)})`,
@@ -379,6 +387,8 @@ export async function enviarPresupuesto(equipoId, formData) {
            <p style="font-size:12px; color:#888;">Iniciá sesión en el sistema para aceptarlo o rechazarlo.</p>`
         ),
       });
+      await supabase.from("notificaciones").insert({ equipo_id: equipoId, texto, canal: canalEnvio(envio) });
+      avisoEmail = avisoEnvio(envio, equipo.cliente.email);
     }
 
     revalidatePath(`/equipo/${equipoId}`);
@@ -386,7 +396,7 @@ export async function enviarPresupuesto(equipoId, formData) {
     revalidatePath("/equipos");
     revalidatePath("/mis-equipos");
 
-    return { ok: true };
+    return { ok: true, avisoEmail };
   } catch (err) {
     return { error: err.message || "Ocurrió un error al enviar el presupuesto." };
   }

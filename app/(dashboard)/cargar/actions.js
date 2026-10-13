@@ -2,7 +2,7 @@
 
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { enviarEmail, plantillaEmail, nombreRemitente, casoNum, esc } from "@/lib/email";
+import { enviarEmail, plantillaEmail, nombreRemitente, casoNum, esc, avisoEnvio, canalEnvio } from "@/lib/email";
 import { MSG_ESTADO } from "@/lib/estados";
 import { tallerHabilitado } from "@/lib/taller";
 
@@ -135,17 +135,19 @@ export async function registrarEquipo(formData) {
 
     await supabase.from("historial_estados").insert({ equipo_id: equipo.id, estado: estadoInicial });
 
+    let avisoEmail = null;
     if (isStaff) {
       const { data: clientePerfil } = await supabase.from("profiles").select("nombre, email").eq("id", clienteId).single();
       if (clientePerfil?.email && MSG_ESTADO.recibido) {
         const texto = MSG_ESTADO.recibido(clientePerfil.nombre?.split(" ")[0] || "cliente", equipo.numero);
-        await supabase.from("notificaciones").insert({ equipo_id: equipo.id, texto, canal: "email" });
-        await enviarEmail({
+        const envio = await enviarEmail({
           to: clientePerfil.email,
           taller,
           subject: `${nombreRemitente(taller)} — Equipo recibido (Caso #${casoNum(equipo.numero)})`,
           html: plantillaEmail(taller, `Caso #${casoNum(equipo.numero)}`, `<p style="font-size:15px; color:#222;">${esc(texto)}</p>`),
         });
+        await supabase.from("notificaciones").insert({ equipo_id: equipo.id, texto, canal: canalEnvio(envio) });
+        avisoEmail = avisoEnvio(envio, clientePerfil.email);
       }
     }
 
@@ -153,7 +155,7 @@ export async function registrarEquipo(formData) {
     revalidatePath("/equipos");
     revalidatePath("/mis-equipos");
 
-    return { equipo, credencialesNuevoCliente };
+    return { equipo, credencialesNuevoCliente, avisoEmail };
   } catch (err) {
     console.error("Error inesperado en registrarEquipo:", err);
     return { error: err.message || "Ocurrió un error inesperado." };

@@ -2,11 +2,13 @@
 
 import { useState, useRef, useTransition } from "react";
 import { enviarPresupuesto, cambiarEstado } from "./actions";
+import AvisoEmail from "@/components/AvisoEmail";
 
 export default function PresupuestoForm({ equipo }) {
   const formRef = useRef(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [avisoEmail, setAvisoEmail] = useState(null);
   const [enviado, setEnviado] = useState(false);
   const [manoObra, setManoObra] = useState(equipo.presupuesto_mano_obra || 0);
   const [repuestos, setRepuestos] = useState(equipo.presupuesto_repuestos || 0);
@@ -26,12 +28,14 @@ export default function PresupuestoForm({ equipo }) {
       setError(res.error);
       return;
     }
+    setAvisoEmail(res.avisoEmail || null);
     setEnviado(true);
   };
 
   const continuarAReparacion = () => {
     startTransition(async () => {
-      await cambiarEstado(equipo.id, "reparacion");
+      const res = await cambiarEstado(equipo.id, "reparacion");
+      setAvisoEmail(res?.avisoEmail || null);
     });
   };
 
@@ -41,6 +45,7 @@ export default function PresupuestoForm({ equipo }) {
 
   return (
     <div>
+      <AvisoEmail mensaje={avisoEmail} />
       {yaEnviado && (
         <div className="rounded-lg p-3 mb-4 bg-info/10 border border-info/30 text-info text-sm font-semibold">
           📨 Presupuesto enviado el {new Date(equipo.presupuesto_enviado_at).toLocaleString("es-AR")}

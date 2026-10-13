@@ -125,7 +125,14 @@ export default async function EquipoDetallePage({ params }) {
                 <div key={n.id} className="bg-surface2 border border-border2 rounded-lg p-3">
                   <p className="text-xs text-ink">{n.texto}</p>
                   <p className="text-[10px] text-dim mt-1">
-                    {new Date(n.fecha).toLocaleString("es-AR")} · {n.canal}
+                    {new Date(n.fecha).toLocaleString("es-AR")} ·{" "}
+                    {n.canal === "email-fallido" ? (
+                      <span className="text-bad font-semibold">✕ el mail NO se pudo enviar</span>
+                    ) : n.canal === "email-no-configurado" ? (
+                      <span className="text-warn font-semibold">⚠ mail no configurado, no se envió</span>
+                    ) : (
+                      n.canal
+                    )}
                   </p>
                 </div>
               ))}

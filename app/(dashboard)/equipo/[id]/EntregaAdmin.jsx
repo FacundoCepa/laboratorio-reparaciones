@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { marcarEntregadoAdmin } from "./actions";
+import AvisoEmail from "@/components/AvisoEmail";
 
 export default function EntregaAdmin({ equipo }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [avisoEmail, setAvisoEmail] = useState(null);
   const [entregadoAt, setEntregadoAt] = useState(equipo.entregado_admin_at);
   const [estado, setEstado] = useState(equipo.estado);
 
@@ -22,6 +24,7 @@ export default function EntregaAdmin({ equipo }) {
       setError(res.error);
       return;
     }
+    setAvisoEmail(res.avisoEmail || null);
     setEntregadoAt(new Date().toISOString());
     if (res.finalizado) setEstado("entregado");
   };
@@ -32,6 +35,7 @@ export default function EntregaAdmin({ equipo }) {
   return (
     <div className="card p-5">
       <div className="eyebrow">Entrega</div>
+      <AvisoEmail mensaje={avisoEmail} />
 
       {ambosConfirmados ? (
         <div className="rounded-lg p-3 mt-2 bg-good/10 border border-good/30 text-good text-sm font-semibold">
