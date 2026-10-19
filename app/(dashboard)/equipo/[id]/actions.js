@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { enviarNotificacionEstado, enviarEmail, plantillaEmail, nombreRemitente, casoNum, esc, avisoEnvio, canalEnvio } from "@/lib/email";
 import { MSG_ESTADO } from "@/lib/estados";
 import { TALLERES_CON_ERP } from "@/lib/config";
+import { erpConfigurado } from "@/lib/erp";
 
 export async function actualizarDetalleTecnico(equipoId, formData) {
   try {
@@ -291,7 +292,7 @@ export async function pasarVentaAlSistema(equipoId) {
       return { error: "Cargá el costo de mano de obra en el informe antes de pasar la venta." };
     }
 
-    if (!process.env.ARGEX_API_URL || !process.env.ARGEX_API_KEY) {
+    if (!erpConfigurado()) {
       return { error: "Falta configurar ARGEX_API_URL / ARGEX_API_KEY en este sistema." };
     }
 
@@ -313,7 +314,10 @@ export async function pasarVentaAlSistema(equipoId) {
       return { error: data?.error || "No se pudo pasar la venta al sistema." };
     }
 
-    await supabase
+    // Se anota en el equipo para no tener que consultarlo cada vez. Si esto
+    // falla, la venta igual existe en Argentina Express y la ficha la va a
+    // mostrar porque se la pregunta directamente a ese sistema.
+    const { error: saveErr } = await supabase
       .from("equipos")
       .update({
         venta_erp_id: data.ventaId,
@@ -321,9 +325,10 @@ export async function pasarVentaAlSistema(equipoId) {
         venta_erp_creada_at: new Date().toISOString(),
       })
       .eq("id", equipoId);
+    if (saveErr) console.error("No se pudo anotar la venta en el equipo:", saveErr);
 
     revalidatePath(`/equipo/${equipoId}`);
-    return { ok: true, numero: data.numero };
+    return { ok: true, numero: data.numero, yaExistia: Boolean(data.yaExistia) };
   } catch (err) {
     return { error: err.message || "Ocurrió un error al pasar la venta al sistema." };
   }

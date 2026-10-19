@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { pasarVentaAlSistema } from "./actions";
 
-export default function PasarVentaBoton({ equipo }) {
+export default function PasarVentaBoton({ equipo, ventaNumero }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [numero, setNumero] = useState(equipo.venta_erp_numero || null);
+  const [numero, setNumero] = useState(ventaNumero || equipo.venta_erp_numero || null);
 
   if (numero) {
     return (

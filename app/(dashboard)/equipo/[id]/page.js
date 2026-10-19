@@ -7,6 +7,7 @@ import EstadoActions from "./EstadoActions";
 import InformeForm from "./InformeForm";
 import PasarVentaBoton from "./PasarVentaBoton";
 import { TALLERES_CON_ERP } from "@/lib/config";
+import { consultarVentaErp } from "@/lib/erp";
 import PresupuestoForm from "./PresupuestoForm";
 import FotosForm from "./FotosForm";
 import DetalleTecnicoForm from "./DetalleTecnicoForm";
@@ -30,6 +31,22 @@ export default async function EquipoDetallePage({ params }) {
     .select("*")
     .eq("equipo_id", equipo.id)
     .order("fecha", { ascending: true });
+
+  // Venta en Argentina Express: si no quedó anotada en el equipo, se le
+  // pregunta directamente a ese sistema (así el técnico no tiene que ir a
+  // buscarla a mano) y, si existe, se anota para la próxima.
+  const usaErp = TALLERES_CON_ERP.includes(equipo.taller?.slug);
+  let ventaErpNumero = equipo.venta_erp_numero || null;
+  if (usaErp && !ventaErpNumero && Number(equipo.costo_mano_obra || 0) > 0) {
+    const venta = await consultarVentaErp(equipo);
+    if (venta) {
+      ventaErpNumero = venta.numero;
+      await supabase
+        .from("equipos")
+        .update({ venta_erp_id: venta.ventaId, venta_erp_numero: venta.numero })
+        .eq("id", equipo.id);
+    }
+  }
 
   const { data: notificaciones } = await supabase
     .from("notificaciones")
@@ -100,7 +117,7 @@ export default async function EquipoDetallePage({ params }) {
               Completalo cuando el equipo esté reparado o finalizado. Se puede editar e imprimir las veces que haga falta.
             </p>
             <InformeForm equipo={equipo} />
-            {TALLERES_CON_ERP.includes(equipo.taller?.slug) && <PasarVentaBoton equipo={equipo} />}
+            {usaErp && <PasarVentaBoton equipo={equipo} ventaNumero={ventaErpNumero} />}
           </Seccion>
 
           <Seccion title="Zona de riesgo">
