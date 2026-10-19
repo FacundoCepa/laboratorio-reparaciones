@@ -5,7 +5,7 @@ import Link from "next/link";
 import StatusPill from "./StatusPill";
 import { estadoInfo } from "@/lib/estados";
 
-export default function ListaEquipos({ equipos, title, emptyMsg, searchable = true, hrefBase = "/equipo" }) {
+export default function ListaEquipos({ equipos, title, emptyMsg, searchable = true, hrefBase = "/equipo", mostrarVenta = false }) {
   const [q, setQ] = useState("");
   const filtered = equipos.filter((e) => {
     if (!q) return true;
@@ -52,7 +52,10 @@ export default function ListaEquipos({ equipos, title, emptyMsg, searchable = tr
                       {e.cliente?.nombre} · {e.serial}
                     </div>
                   </div>
-                  <StatusPill color={estadoInfo(e.estado).color}>{estadoInfo(e.estado).label}</StatusPill>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <StatusPill color={estadoInfo(e.estado).color}>{estadoInfo(e.estado).label}</StatusPill>
+                    {mostrarVenta && <EstadoVenta equipo={e} />}
+                  </div>
                 </div>
               </div>
             </Link>
@@ -60,5 +63,28 @@ export default function ListaEquipos({ equipos, title, emptyMsg, searchable = tr
         </div>
       )}
     </div>
+  );
+}
+
+// Indicador de si la reparación ya se pasó como venta a Argentina Express.
+function EstadoVenta({ equipo }) {
+  if (equipo.venta_erp_numero) {
+    return (
+      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-good/10 border border-good/30 text-good whitespace-nowrap">
+        💼 Venta #{equipo.venta_erp_numero} pasada
+      </span>
+    );
+  }
+  if (Number(equipo.costo_mano_obra || 0) > 0) {
+    return (
+      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-warn/10 border border-warn/40 text-warn whitespace-nowrap">
+        Venta sin pasar
+      </span>
+    );
+  }
+  return (
+    <span className="text-[10px] px-2 py-0.5 rounded-full border border-border2 text-dim whitespace-nowrap">
+      Sin informe de costo
+    </span>
   );
 }
