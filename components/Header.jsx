@@ -19,7 +19,12 @@ export default function Header({ nombre, role, superadmin, taller }) {
     { href: "/entregados", label: "Entregados" },
     { href: "/historial", label: "Historial" },
     { href: "/usuarios", label: "Usuarios" },
-    ...(role === "admin" ? [{ href: "/mi-taller", label: "Mi taller" }] : []),
+    ...(role === "admin"
+      ? [
+          { href: "/resumenes", label: "Resúmenes" },
+          { href: "/mi-taller", label: "Mi taller" },
+        ]
+      : []),
     ...(superadmin ? [{ href: "/admin", label: "★ Admin" }] : []),
   ];
   const clientTabs = [
