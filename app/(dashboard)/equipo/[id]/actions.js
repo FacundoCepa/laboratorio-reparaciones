@@ -311,7 +311,25 @@ export async function pasarVentaAlSistema(equipoId) {
 
     const data = await res.json().catch(() => null);
     if (!res.ok) {
-      return { error: data?.error || "No se pudo pasar la venta al sistema." };
+      // Se muestra el motivo exacto (qué dato rechazó Argentina Express),
+      // así el técnico sabe qué corregir sin tener que adivinar.
+      const CAMPOS = {
+        clienteEmail: "el email del cliente",
+        clienteNombre: "el nombre del cliente",
+        clienteTelefono: "el teléfono del cliente",
+        montoManoObraArs: "el costo de mano de obra",
+        montoRepuestoArs: "el costo de repuestos",
+        numeroOrden: "el número de caso",
+      };
+      const malos = Object.keys(data?.detalle?.fieldErrors || {}).map((k) => CAMPOS[k] || k);
+      let motivo = data?.error || `Argentina Express respondió con error ${res.status}.`;
+      if (malos.length) motivo += ` Revisá ${malos.join(" y ")}.`;
+      if (malos.includes("el email del cliente")) motivo += ` (está cargado como "${equipo.cliente?.email}")`;
+      if (!data && (res.status === 504 || res.status === 502)) {
+        motivo = "Argentina Express tardó demasiado en responder. Esperá un minuto y recargá: si la venta se llegó a crear, va a aparecer sola.";
+      }
+      console.error("Pasar venta: Argentina Express respondió", res.status, data);
+      return { error: motivo };
     }
 
     // Se anota en el equipo para no tener que consultarlo cada vez. Si esto
